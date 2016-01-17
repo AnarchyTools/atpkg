@@ -1,0 +1,10 @@
+stages:
+- build
+
+osx:
+    stage: build
+    script: 
+        - atbuild run-tests
+    tags:
+        - openswift
+        - atbuild
