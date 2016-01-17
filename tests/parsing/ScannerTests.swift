@@ -46,7 +46,7 @@ class ScannerTests: Test {
     static func testBasicClj() throws {
         let filepath = "./tests/collateral/basic.atpkg"
         
-        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding) as String
+        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding).toString
         let scanner = Scanner(content: content)
         
         try test.assert(scanner.next()?.character == ";")

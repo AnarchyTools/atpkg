@@ -15,6 +15,11 @@
 // NOTE: This is the crappiest test thing ever... but it works for now.
 import Foundation
 
+//SR-567
+#if os(Linux)
+import Glibc
+#endif
+
 extension String : ErrorType {}
 
 enum test {
@@ -51,7 +56,6 @@ extension Test {
     }
 }
 
-print()
 
 let tests: [Test] = [
     // NOTE: Add your test classes here...
@@ -67,5 +71,4 @@ for test in tests {
     passed = passed && test.runTests()
 }
 
-print()
 if !passed { exit(1) }

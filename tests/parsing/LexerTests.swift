@@ -44,7 +44,7 @@ class LexerTests: Test {
     static func testBasic() throws {
         let filepath = "./tests/collateral/basic.atpkg"
 
-        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding) as String
+        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding).toString
         let scanner = Scanner(content: content)
         let lexer = Lexer(scanner: scanner)
         
