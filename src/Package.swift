@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import Foundation
 
 final public class Task {
     public var key: String = ""
@@ -75,7 +76,8 @@ final public class Package {
         
         do {
             let result = try parser.parse()
-            self.init(type: result, configurations: configurations)
+            let basepath = (filepath as NSString).stringByDeletingLastPathComponent
+            self.init(type: result, configurations: configurations, pathOnDisk:basepath)
         }
         catch {
             print("error: \(error)")
@@ -83,7 +85,7 @@ final public class Package {
         }
     }
     
-    public init?(type: ParseType, configurations: [String: String]) {
+    public init?(type: ParseType, configurations: [String: String], pathOnDisk: String) {
         if type.name != "package" { return nil }
         
         if let value = type.properties["name"]?.string { self.name = value }
@@ -125,6 +127,20 @@ final public class Package {
                 }
                 else {
                     fatalError("Global configurations not implemented; can't configure option \(requestedConfigurationValue) for non-task spec \(taskSpec)")
+                }
+            }
+        }
+
+        //load imported tasks
+        if let imports = type.properties["import"]?.vector {
+            for importFile in imports {
+                guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
+                
+                guard let remotePackage = Package(filepath: pathOnDisk + "/" + importFileString, configurations: configurations) else {
+                    fatalError("Can't load remote package \(pathOnDisk + "/" + importFileString)")
+                }
+                for task in remotePackage.tasks.keys {
+                    self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
                 }
             }
         }

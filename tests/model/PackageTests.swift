@@ -19,7 +19,8 @@ import atpkg
 class PackageTests: Test {
     required init() {}
     let tests = [
-        PackageTests.testBasic
+        PackageTests.testBasic,
+        PackageTests.testImport
     ]
 
     let filename = __FILE__
@@ -32,7 +33,7 @@ class PackageTests: Test {
         }
         
         let result = try parser.parse()
-        guard let package = Package(type: result, configurations: [:]) else { try test.assert(false); return }
+        guard let package = Package(type: result, configurations: [:], pathOnDisk: "./tests/collateral") else { try test.assert(false); return }
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
@@ -47,5 +48,19 @@ class PackageTests: Test {
             try test.assert(task["source"]?.vector?[0].string == "src/**.swift")
             try test.assert(task["source"]?.vector?[1].string == "lib/**.swift")
         }
+    }
+
+    static func testImport() throws {
+        let filepath = "./tests/collateral/import_src.atpkg"
+
+        guard let parser = Parser(filepath: filepath) else {
+            print("error")
+            try test.assert(false); return
+        }
+        
+        let result = try parser.parse()
+        guard let package = Package(type: result, configurations: [:], pathOnDisk: "./tests/collateral") else { print("error"); try test.assert(false); return }
+
+        try test.assert(package.tasks["import_dst.build"] != nil)
     }
 }
