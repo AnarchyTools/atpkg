@@ -40,6 +40,7 @@ extension NSString {
 }
 
 //enumeratorAtPath isn't implemented
+//https://github.com/apple/swift-corelibs-foundation/pull/232 upstreams this code.
 class ICantBelieveItsNotNSDirectoryEnumerator {
     let baseURL: NSURL
     let innerEnumerator : NSDirectoryEnumerator
