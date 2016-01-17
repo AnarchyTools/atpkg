@@ -18,11 +18,17 @@
 
   :configurations {
         :bootstrap {
-             :yes {
+             :osx {
                 :atpkg {
                   :bootstrapOnly true
                   :llbuildyaml "bootstrap/bootstrap-macosx-atpkg.swift-build"
                 }
+             }
+             :linux {
+              :atpkg {
+                :bootstrapOnly true
+                :llbuildyaml "bootstrap/bootstrap-linux-atpkg.swift-build"
+              }
              }
         }
   }
