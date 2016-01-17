@@ -1,0 +1,15 @@
+;; A package that imports a remote file
+(package
+  :name "import_src"
+  :version "0.1.0-dev"
+  :import ["import_dst.atpkg"]
+  
+  :tasks {:build {:tool "lldb-build"
+                  :name "json-swift"
+                  :output-type "lib" 
+                  :source [ "src/**.swift" "lib/**.swift" ]
+                  :dependencies ["import_dst.build"]
+                  }}
+)
+
+; End of the sample.
