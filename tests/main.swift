@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // NOTE: This is the crappiest test thing ever... but it works for now.
+import Foundation
 
 extension String : ErrorType {}
 
@@ -27,23 +28,26 @@ enum test {
 
 protocol Test {
     init()
-    func runTests()
+    func runTests() -> Bool
     
     var tests: [() throws -> ()] { get }
     var filename: String { get }
 }
 
 extension Test {
-    func runTests() {
+    func runTests() -> Bool {
         print("Tests for \(filename)")
+        var passed = true
         for test in tests {
             do {
                 try test()
             }
             catch {
                 print("\(filename): **FAILED** \(error)")
+                passed = false
             }
         }
+        return passed
     }
 }
 
@@ -58,8 +62,10 @@ let tests: [Test] = [
     PackageTests()
 ]
 
+var passed = true
 for test in tests {
-    test.runTests()
+    passed = passed && test.runTests()
 }
 
 print()
+if !passed { exit(1) }
