@@ -1,6 +1,12 @@
 stages:
 - build
 
+linux:
+    stage: build
+    script: 
+        - docker build . --rm=true
+    tags:
+        - docker
 osx:
     stage: build
     script: 
