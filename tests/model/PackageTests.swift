@@ -55,6 +55,6 @@ class PackageTests: Test {
         guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
 
         try test.assert(package.tasks["import_dst.build"] != nil)
-        try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral")
+        try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
     }
 }
