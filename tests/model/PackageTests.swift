@@ -25,14 +25,14 @@ class PackageTests: Test {
     let filename = __FILE__
     
     static func testBasic() throws {
-        let filepath = "./atpkg/tests/collateral/basic.atpkg"
+        let filepath = "./tests/collateral/basic.atpkg"
 
         guard let parser = Parser(filepath: filepath) else {
             try test.assert(false); return
         }
         
         let result = try parser.parse()
-        guard let package = Package(type: result) else { try test.assert(false); return }
+        guard let package = Package(type: result, configurations: [:]) else { try test.assert(false); return }
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")

@@ -44,7 +44,7 @@ class ScannerTests: Test {
     let filename = __FILE__
 
     static func testBasicClj() throws {
-        let filepath = "./atpkg/tests/collateral/basic.atpkg"
+        let filepath = "./tests/collateral/basic.atpkg"
         
         let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding) as String
         let scanner = Scanner(content: content)
