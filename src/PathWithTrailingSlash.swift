@@ -16,6 +16,9 @@ extension String {
     var pathWithTrailingSlash: String {
         if self.hasSuffix("/") { return self }
         else if self.characters.count > 0 { return self + "/" }
-        else { return NSFileManager.defaultManager().currentDirectoryPath + "/" }
+        else { 
+            //some clients, like collectSources, need relative paths.  We shouldn't insert an absolute path if we didn't get one.
+            return "" 
+        } 
     }
 }
