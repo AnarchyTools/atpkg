@@ -85,7 +85,7 @@ final public class Parser {
             return nil
         }
         
-        let scanner = Scanner(content: content as String)
+        let scanner = Scanner(content: content.toString)
         self.lexer = Lexer(scanner: scanner)
     }
     

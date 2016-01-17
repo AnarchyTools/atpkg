@@ -29,6 +29,7 @@
                 :bootstrapOnly true
                 :llbuildyaml "bootstrap/bootstrap-linux-atpkg.swift-build"
                 :swiftCPath "/usr/local/bin/swiftc"
+                :linkSDK false
               }
              }
         }

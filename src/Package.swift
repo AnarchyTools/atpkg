@@ -77,7 +77,7 @@ final public class Package {
         
         do {
             let result = try parser.parse()
-            let basepath = (filepath as NSString).stringByDeletingLastPathComponent
+            let basepath = filepath.toNSString.stringByDeletingLastPathComponent
             self.init(type: result, configurations: configurations, pathOnDisk:basepath)
         }
         catch {
@@ -136,8 +136,8 @@ final public class Package {
         if let imports = type.properties["import"]?.vector {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
-                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString as NSString).stringByDeletingLastPathComponent.pathWithTrailingSlash
-                let adjustedFileName = (importFileString as NSString).lastPathComponent
+                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
+                let adjustedFileName = importFileString.toNSString.lastPathComponent
                 guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, configurations: configurations) else {
                     fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
                 }
