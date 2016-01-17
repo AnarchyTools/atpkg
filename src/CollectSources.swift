@@ -17,13 +17,16 @@ import Foundation
  *   - parameter sourceDescriptions: a descriptions of sources such as ["src/**.swift"] */
  *   - returns: A list of resolved sources such as ["src/a.swift", "src/b.swift"]
  */
-public func collectSources(sourceDescriptions: [String]) -> [String] {
+public func collectSources(sourceDescriptions: [String], task: Task) -> [String] {
     var sources : [String] = []
-    for description in sourceDescriptions {
+    for unPrefixedDescription in sourceDescriptions {
+        let description = task.importedPath + unPrefixedDescription
         if description.hasSuffix("**.swift") {
             let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
             let manager = NSFileManager.defaultManager()
-            let enumerator = manager.enumeratorAtPath(basepath)!
+            guard let enumerator = manager.enumeratorAtPath(basepath) else {
+                fatalError("Invalid path \(basepath)")
+            }
             while let source = enumerator.nextObject() as? String {
                 if source.hasSuffix("swift") {
                     sources.append(basepath + "/" + source)

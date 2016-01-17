@@ -52,15 +52,9 @@ class PackageTests: Test {
 
     static func testImport() throws {
         let filepath = "./tests/collateral/import_src.atpkg"
-
-        guard let parser = Parser(filepath: filepath) else {
-            print("error")
-            try test.assert(false); return
-        }
-        
-        let result = try parser.parse()
-        guard let package = Package(type: result, configurations: [:], pathOnDisk: "./tests/collateral") else { print("error"); try test.assert(false); return }
+        guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
 
         try test.assert(package.tasks["import_dst.build"] != nil)
+        try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral")
     }
 }

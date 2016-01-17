@@ -17,16 +17,17 @@ final public class Task {
     public var key: String = ""
     public var dependencies: [String] = []
     public var tool: String = "atllbuild"
+    public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
     
     private var kvp: [String:ParseValue]
 
-    init?(value: ParseValue, name: String) {
+    init?(value: ParseValue, name: String, importedPath: String) {
         guard let kvp = value.map else { return nil }
-        
+        self.importedPath = importedPath.pathWithTrailingSlash
         self.kvp = kvp
         self.key = name
         self.tool = kvp["tool"]?.string ?? self.tool
-        
+
         if let values = kvp["dependencies"]?.vector {
             for value in values {
                 if let dep = value.string { self.dependencies.append(dep) }
@@ -97,7 +98,7 @@ final public class Package {
 
         if let parsedTasks = type.properties["tasks"]?.map {
             for (key, value) in parsedTasks {
-                if let task = Task(value: value, name: key) {
+                if let task = Task(value: value, name: key, importedPath: pathOnDisk) {
                     self.tasks[key] = task
                 }
             }
@@ -135,11 +136,13 @@ final public class Package {
         if let imports = type.properties["import"]?.vector {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
-                
-                guard let remotePackage = Package(filepath: pathOnDisk + "/" + importFileString, configurations: configurations) else {
-                    fatalError("Can't load remote package \(pathOnDisk + "/" + importFileString)")
+                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString as NSString).stringByDeletingLastPathComponent.pathWithTrailingSlash
+                let adjustedFileName = (importFileString as NSString).lastPathComponent
+                guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, configurations: configurations) else {
+                    fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
                 }
                 for task in remotePackage.tasks.keys {
+                    remotePackage.tasks[task]!.importedPath = adjustedImportPath
                     self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
                 }
             }
