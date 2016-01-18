@@ -20,7 +20,8 @@ class PackageTests: Test {
     required init() {}
     let tests = [
         PackageTests.testBasic,
-        PackageTests.testImport
+        PackageTests.testImport,
+        PackageTests.testMixins
     ]
 
     let filename = __FILE__
@@ -56,5 +57,31 @@ class PackageTests: Test {
 
         try test.assert(package.tasks["import_dst.build"] != nil)
         try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
+    }
+
+    static func testMixins() throws {
+        let filepath = "./tests/collateral/mixins.atpkg"
+        guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
+        guard let compileOptions = package.tasks["build"]?["compileOptions"]?.vector else {
+            fatalError("No compile options?")
+        }
+        try test.assert(compileOptions.count == 4)
+        try test.assert(compileOptions[0].string == "-D")
+        try test.assert(compileOptions[1].string == "AWESOME")
+        try test.assert(compileOptions[2].string == "-D")
+        try test.assert(compileOptions[3].string == "MORE_AWESOME")
+
+        guard let package2 = Package(filepath: filepath, configurations: ["awesome":"most"]) else { print("error"); try test.assert(false); return }
+        guard let compileOptions2 = package.tasks["build"]?["compileOptions"]?.vector else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions.count == 6)
+        try test.assert(compileOptions[0].string == "-D")
+        try test.assert(compileOptions[1].string == "AWESOME")
+        try test.assert(compileOptions[2].string == "-D")
+        try test.assert(compileOptions[3].string == "MORE_AWESOME")
+        try test.assert(compileOptions[4].string == "-D")
+        try test.assert(compileOptions[5].string == "MOST_AWESOME")
+
     }
 }

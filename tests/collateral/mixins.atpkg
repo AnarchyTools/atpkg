@@ -1,0 +1,33 @@
+;; A mixin sample file
+
+(package
+:name "mixin"
+:version "0.1.0-dev"
+
+:mixins {
+    :sample-mixin {
+        :compileOptions ["-D" "MORE_AWESOME"]
+    }
+    :sample-mixin-two {
+        :compileOptions ["-D" "MOST_AWESOME"]
+    }
+}
+
+:tasks {
+    :build {
+        :tool "lldb-build"
+        :name "json-swift"
+        :output-type "lib" 
+        :source [ "src/**.swift" "lib/**.swift" ]
+        :compileOptions ["-D" "AWESOME"]
+        :mixins ["sample-mixin"]
+        :configurations {
+            :awesome {
+                :most ["sample-mixin-two"]
+            }
+        }
+    }
+}
+)
+
+; End of the sample.
