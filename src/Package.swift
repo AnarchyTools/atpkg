@@ -58,6 +58,9 @@ final public class Package {
     public var version: String = ""
     public var tasks: [String:Task] = [:]
 
+    var mixins: [String: ParseValue] = [:]
+    var adjustedImportPath: String = ""
+
     /**Calculate the pruned dependency graph for the given task
 - returns: A list of tasks in a reasonable order to be processed. */
     public func prunedDependencyGraph(task: Task) -> [Task] {
@@ -137,33 +140,10 @@ final public class Package {
                 print("Warning: configuration \(requestedConfiguration) had no effect.")
             }
         }
-        //swap in mixins
-        if let mixins = type.properties["mixins"]?.map {
-            for (name, task) in self.tasks {
-                for mixinName in task.mixins {
-                    guard let mixin = mixins[mixinName]?.map else {
-                        fatalError("Can't find mixin named \(mixinName) in \(mixins)")
-                    }
-                    for (optionName, optionValue) in mixin {
-                        guard let vectorValue = optionValue.vector else {
-                            fatalError("Unsupported non-vector type \(optionValue)")
-                        }
-                        guard let existingValue = task[optionName]?.vector else {
-                            fatalError("Can't mixin to \(task.key)[\(optionName)]")
-                        }
 
-                        guard let optionValueVec = optionValue.vector else {
-                            fatalError("Non-vector option value \(optionValue)")
-                        }
-                        var newValue = existingValue
-                        newValue.appendContentsOf(optionValueVec)
-                        task.kvp[optionName] = ParseValue.Vector(newValue)
-                    }
-                }
-            }
-        }
+        var remotePackages: [Package] = []
 
-        //load imported tasks
+        //load remote packages
         if let imports = type.properties["import"]?.vector {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
@@ -172,11 +152,56 @@ final public class Package {
                 guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, configurations: configurations) else {
                     fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
                 }
-                for task in remotePackage.tasks.keys {
-                    remotePackage.tasks[task]!.importedPath = adjustedImportPath
-                    self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
+                remotePackage.adjustedImportPath = adjustedImportPath
+                remotePackages.append(remotePackage)
+            }
+        }
+
+        //load remote mixins
+        for remotePackage in remotePackages {
+            for (mixinName, value) in remotePackage.mixins {
+                self.mixins["\(remotePackage.name).\(mixinName)"] = value
+            }
+        }
+        
+        if let mixins = type.properties["mixins"]?.map {
+            for (name, mixin) in mixins {
+                self.mixins[name] = mixin
+            }
+        }
+
+        //swap in mixins
+        for (name, task) in self.tasks {
+            for mixinName in task.mixins {
+                guard let mixin = mixins[mixinName]?.map else {
+                    fatalError("Can't find mixin named \(mixinName) in \(mixins)")
+                }
+                for (optionName, optionValue) in mixin {
+                    guard let vectorValue = optionValue.vector else {
+                        fatalError("Unsupported non-vector type \(optionValue)")
+                    }
+                    guard let existingValue = task[optionName]?.vector else {
+                        fatalError("Can't mixin to \(task.key)[\(optionName)]")
+                    }
+
+                    guard let optionValueVec = optionValue.vector else {
+                        fatalError("Non-vector option value \(optionValue)")
+                    }
+                    var newValue = existingValue
+                    newValue.appendContentsOf(optionValueVec)
+                    task.kvp[optionName] = ParseValue.Vector(newValue)
                 }
             }
         }
+
+        //load remote tasks
+        for remotePackage in remotePackages {
+            for task in remotePackage.tasks.keys {
+                remotePackage.tasks[task]!.importedPath = remotePackage.adjustedImportPath
+                self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
+            }
+        }
+
+
     }
 }

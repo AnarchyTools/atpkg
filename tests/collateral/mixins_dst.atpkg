@@ -1,0 +1,11 @@
+(package
+:name "mixins_dst"
+:version "0.1.0-dev"
+
+:mixins {
+    :exported-mixin {
+        :compileOptions ["-D" "MOST_AWESOME"]
+    }
+}
+
+)
