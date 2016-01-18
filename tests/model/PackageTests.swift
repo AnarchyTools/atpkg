@@ -72,16 +72,16 @@ class PackageTests: Test {
         try test.assert(compileOptions[3].string == "MORE_AWESOME")
 
         guard let package2 = Package(filepath: filepath, configurations: ["awesome":"most"]) else { print("error"); try test.assert(false); return }
-        guard let compileOptions2 = package.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {
             fatalError("no compile options?")
         }
-        try test.assert(compileOptions.count == 6)
-        try test.assert(compileOptions[0].string == "-D")
-        try test.assert(compileOptions[1].string == "AWESOME")
-        try test.assert(compileOptions[2].string == "-D")
-        try test.assert(compileOptions[3].string == "MORE_AWESOME")
-        try test.assert(compileOptions[4].string == "-D")
-        try test.assert(compileOptions[5].string == "MOST_AWESOME")
+        try test.assert(compileOptions2.count == 6)
+        try test.assert(compileOptions2[0].string == "-D")
+        try test.assert(compileOptions2[1].string == "AWESOME")
+        try test.assert(compileOptions2[2].string == "-D")
+        try test.assert(compileOptions2[3].string == "MORE_AWESOME")
+        try test.assert(compileOptions2[4].string == "-D")
+        try test.assert(compileOptions2[5].string == "MOST_AWESOME")
 
     }
 }

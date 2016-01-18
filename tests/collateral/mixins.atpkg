@@ -22,9 +22,7 @@
         :compileOptions ["-D" "AWESOME"]
         :mixins ["sample-mixin"]
         :configurations {
-            :awesome {
-                :most ["sample-mixin-two"]
-            }
+            :awesome ["sample-mixin-two"]
         }
     }
 }

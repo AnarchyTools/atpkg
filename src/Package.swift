@@ -18,6 +18,8 @@ final public class Task {
     public var dependencies: [String] = []
     public var tool: String = "atllbuild"
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
+
+    var mixins: [String] = [] ///The mixins we should apply to this task
     
     private var kvp: [String:ParseValue]
 
@@ -27,6 +29,14 @@ final public class Task {
         self.kvp = kvp
         self.key = name
         self.tool = kvp["tool"]?.string ?? self.tool
+        if let mixins = kvp["mixins"]?.vector {
+            for mixin in mixins {
+                guard let str = mixin.string else {
+                    fatalError("Non-string mixin \(mixin)")
+                }
+                self.mixins.append(str)
+            }
+        }
 
         if let values = kvp["dependencies"]?.vector {
             for value in values {
@@ -105,29 +115,50 @@ final public class Package {
         }
 
         //swap in configurations
+        var usedConfigurations : [String] = []
         for requestedConfiguration in configurations.keys {
-            let requestedConfigurationValue = configurations[requestedConfiguration]!
-            //find the overrides specific to this configuration
-            guard let parsedConfigurations = type.properties["configurations"]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) but no configurations were present in the package file.")
-            }
-            guard let parsedConfiguration = parsedConfigurations[requestedConfiguration]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) but we only have \(Array(parsedConfigurations.keys))")
-            }
-            guard let overrideSpecifications = parsedConfiguration[requestedConfigurationValue]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) \(requestedConfigurationValue) but we only have \(Array(parsedConfiguration.keys))")
-            }
-            for taskSpec in overrideSpecifications.keys {
-                guard let overrideSpecification = overrideSpecifications[taskSpec]?.map else {
-                    fatalError("Cannot get override specification for --\(requestedConfiguration) \(requestedConfigurationValue)")
-                }
-                if let task = tasks[taskSpec] {
-                    for(k,v) in overrideSpecification {
-                        task.kvp[k] = v
+            for (taskname, task) in self.tasks {
+                if let configurationSpecs = task.kvp["configurations"]?.map {
+                    if let activeConfiguration = configurationSpecs[requestedConfiguration]?.vector {
+                        for mixin in activeConfiguration {
+                            guard let str = mixin.string else {
+                                fatalError("Non-string mixin \(mixin)")
+                            }
+                            task.mixins.append(str)
+                            usedConfigurations.append(requestedConfiguration)
+                        }
                     }
                 }
-                else {
-                    fatalError("Global configurations not implemented; can't configure option \(requestedConfigurationValue) for non-task spec \(taskSpec)")
+            }
+        }
+        //warn about unused configurations
+        for requestedConfiguration in configurations.keys {
+            if !usedConfigurations.contains(requestedConfiguration) {
+                print("Warning: configuration \(requestedConfiguration) had no effect.")
+            }
+        }
+        //swap in mixins
+        if let mixins = type.properties["mixins"]?.map {
+            for (name, task) in self.tasks {
+                for mixinName in task.mixins {
+                    guard let mixin = mixins[mixinName]?.map else {
+                        fatalError("Can't find mixin named \(mixinName) in \(mixins)")
+                    }
+                    for (optionName, optionValue) in mixin {
+                        guard let vectorValue = optionValue.vector else {
+                            fatalError("Unsupported non-vector type \(optionValue)")
+                        }
+                        guard let existingValue = task[optionName]?.vector else {
+                            fatalError("Can't mixin to \(task.key)[\(optionName)]")
+                        }
+
+                        guard let optionValueVec = optionValue.vector else {
+                            fatalError("Non-vector option value \(optionValue)")
+                        }
+                        var newValue = existingValue
+                        newValue.appendContentsOf(optionValueVec)
+                        task.kvp[optionName] = ParseValue.Vector(newValue)
+                    }
                 }
             }
         }
