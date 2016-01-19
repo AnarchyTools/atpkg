@@ -1,9 +1,9 @@
 (package
-:name "mixins_dst"
+:name "overlays_dst"
 :version "0.1.0-dev"
 
-:mixins {
-    :exported-mixin {
+:overlays {
+    :exported-overlay {
         :compileOptions ["-D" "MOST_AWESOME"]
     }
 }

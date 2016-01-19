@@ -1,14 +1,14 @@
 ;; A mixin sample file
 
 (package
-:name "mixin"
+:name "overlay"
 :version "0.1.0-dev"
 
-:mixins {
-    :sample-mixin {
+:overlays {
+    :sample-overlay {
         :compileOptions ["-D" "MORE_AWESOME"]
     }
-    :sample-mixin-two {
+    :sample-overlay-two {
         :compileOptions ["-D" "MOST_AWESOME"]
     }
 }
@@ -20,9 +20,9 @@
         :output-type "lib" 
         :source [ "src/**.swift" "lib/**.swift" ]
         :compileOptions ["-D" "AWESOME"]
-        :mixins ["sample-mixin"]
+        :overlays ["sample-overlay"]
         :configurations {
-            :awesome ["sample-mixin-two"]
+            :awesome ["sample-overlay-two"]
         }
     }
 }

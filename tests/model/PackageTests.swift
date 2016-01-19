@@ -21,8 +21,8 @@ class PackageTests: Test {
     let tests = [
         PackageTests.testBasic,
         PackageTests.testImport,
-        PackageTests.testMixins,
-        PackageTests.testExportedMixins
+        PackageTests.testOverlays,
+        PackageTests.testExportedOverlays
     ]
 
     let filename = __FILE__
@@ -60,8 +60,8 @@ class PackageTests: Test {
         try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
     }
 
-    static func testMixins() throws {
-        let filepath = "./tests/collateral/mixins.atpkg"
+    static func testOverlays() throws {
+        let filepath = "./tests/collateral/overlays.atpkg"
         guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
         guard let compileOptions = package.tasks["build"]?["compileOptions"]?.vector else {
             fatalError("No compile options?")
@@ -86,8 +86,8 @@ class PackageTests: Test {
 
     }
 
-    static func testExportedMixins() throws {
-        let filepath = "./tests/collateral/mixins_src.atpkg"
+    static func testExportedOverlays() throws {
+        let filepath = "./tests/collateral/overlays_src.atpkg"
 
         guard let package2 = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
         guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {

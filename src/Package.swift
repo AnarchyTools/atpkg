@@ -19,7 +19,7 @@ final public class Task {
     public var tool: String = "atllbuild"
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
 
-    var mixins: [String] = [] ///The mixins we should apply to this task
+    var overlays: [String] = [] ///The overlays we should apply to this task
     
     public var allKeys: [String]
     
@@ -32,12 +32,12 @@ final public class Task {
         self.key = name
         self.allKeys = [String](kvp.keys)
         self.tool = kvp["tool"]?.string ?? self.tool
-        if let mixins = kvp["mixins"]?.vector {
-            for mixin in mixins {
+        if let overlays = kvp["overlays"]?.vector {
+            for mixin in overlays {
                 guard let str = mixin.string else {
                     fatalError("Non-string mixin \(mixin)")
                 }
-                self.mixins.append(str)
+                self.overlays.append(str)
             }
         }
 
@@ -61,7 +61,7 @@ final public class Package {
     public var version: String = ""
     public var tasks: [String:Task] = [:]
 
-    var mixins: [String: ParseValue] = [:]
+    var overlays: [String: ParseValue] = [:]
     var adjustedImportPath: String = ""
 
     /**Calculate the pruned dependency graph for the given task
@@ -130,7 +130,7 @@ final public class Package {
                             guard let str = mixin.string else {
                                 fatalError("Non-string mixin \(mixin)")
                             }
-                            task.mixins.append(str)
+                            task.overlays.append(str)
                             usedConfigurations.append(requestedConfiguration)
                         }
                     }
@@ -160,24 +160,24 @@ final public class Package {
             }
         }
 
-        //load remote mixins
+        //load remote overlays
         for remotePackage in remotePackages {
-            for (mixinName, value) in remotePackage.mixins {
-                self.mixins["\(remotePackage.name).\(mixinName)"] = value
+            for (mixinName, value) in remotePackage.overlays {
+                self.overlays["\(remotePackage.name).\(mixinName)"] = value
             }
         }
         
-        if let mixins = type.properties["mixins"]?.map {
-            for (name, mixin) in mixins {
-                self.mixins[name] = mixin
+        if let overlays = type.properties["overlays"]?.map {
+            for (name, mixin) in overlays {
+                self.overlays[name] = mixin
             }
         }
 
-        //swap in mixins
+        //swap in overlays
         for (name, task) in self.tasks {
-            for mixinName in task.mixins {
-                guard let mixin = mixins[mixinName]?.map else {
-                    fatalError("Can't find mixin named \(mixinName) in \(mixins)")
+            for mixinName in task.overlays {
+                guard let mixin = overlays[mixinName]?.map else {
+                    fatalError("Can't find mixin named \(mixinName) in \(overlays)")
                 }
                 for (optionName, optionValue) in mixin {
                     guard let vectorValue = optionValue.vector else {

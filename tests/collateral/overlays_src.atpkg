@@ -1,12 +1,12 @@
-;; A mixin sample file
+;; An overlay sample file
 
 (package
-:name "mixins_src"
+:name "overlays_src"
 :version "0.1.0-dev"
-:import ["mixins_dst.atpkg"]
+:import ["overlays_dst.atpkg"]
 
-:mixins {
-    :sample-mixin {
+:overlays {
+    :sample-overlay {
         :compileOptions ["-D" "MORE_AWESOME"]
     }
 }
@@ -18,7 +18,7 @@
         :output-type "lib" 
         :source [ "src/**.swift" "lib/**.swift" ]
         :compileOptions ["-D" "AWESOME"]
-        :mixins ["sample-mixin" "mixins_dst.exported-mixin"]
+        :overlays ["sample-overlay" "overlays_dst.exported-overlay"]
     }
 }
 )
