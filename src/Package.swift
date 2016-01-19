@@ -106,6 +106,13 @@ final public class Task {
                 }
                 self.kvp[optionName] = ParseValue.StringLiteral(str)
 
+                case ParseValue.BoolLiteral(let b):
+                if let existingValue = self[optionName] {
+                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value \(existingValue)")
+                }
+                self.kvp[optionName] = ParseValue.BoolLiteral(b)
+
+
                 default:
                 fatalError("Canot overlay value \(optionValue); please file a bug")
             }

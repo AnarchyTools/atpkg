@@ -114,6 +114,11 @@ class PackageTests: Test {
 
         try test.assert(vecOption[0].string == "OVERLAY")
 
+        guard let package7 = Package(filepath: filepath, overlay: ["boolOption"]) else { print("error"); try test.assert(false); return }
+        guard let boolOption = package7.tasks["build"]?["boolOption"]?.bool else {
+            fatalError("no bool option?")
+        }
+        try test.assert(boolOption == true)
     }
 
     static func testExportedOverlays() throws {

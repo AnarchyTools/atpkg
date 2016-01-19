@@ -20,6 +20,9 @@
     :emptyVecOption {
         :emptyVecOption ["OVERLAY"]
     }
+    :boolOption {
+        :boolOption true
+    }
 }
 
 :tasks {
