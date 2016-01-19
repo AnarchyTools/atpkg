@@ -79,8 +79,13 @@ final public class Task {
         for (optionName, optionValue) in overlay {
             switch(optionValue) {
                 case ParseValue.Vector(let vectorValue):
-                guard let existingValue = self[optionName]?.vector else {
-                    fatalError("Can't overlay on \(self.key)[\(optionName)]")
+                let existingValue: [ParseValue]
+
+                if let ev = self[optionName]?.vector  {
+                    existingValue = ev
+                }
+                else {
+                    existingValue = []
                 }
 
                 guard let optionValueVec = optionValue.vector else {

@@ -104,6 +104,15 @@ class PackageTests: Test {
         guard let stringOption = package5.tasks["build"]?["stringOption"]?.string else {
             fatalError("no string option?")
         }
+        try test.assert(stringOption == "stringOption")
+
+        guard let package6 = Package(filepath: filepath, overlay: ["emptyVecOption"]) else { print("error"); try test.assert(false); return }
+        guard let vecOption = package6.tasks["build"]?["emptyVecOption"]?.vector else {
+            fatalError("no vec option?")
+        }
+        try test.assert(vecOption.count == 1)
+
+        try test.assert(vecOption[0].string == "OVERLAY")
 
     }
 
