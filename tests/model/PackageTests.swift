@@ -35,7 +35,7 @@ class PackageTests: Test {
         }
         
         let result = try parser.parse()
-        guard let package = Package(type: result, configurations: [:], pathOnDisk: "./tests/collateral") else { try test.assert(false); return }
+        guard let package = Package(type: result, overlay: [], pathOnDisk: "./tests/collateral") else { try test.assert(false); return }
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
@@ -54,7 +54,7 @@ class PackageTests: Test {
 
     static func testImport() throws {
         let filepath = "./tests/collateral/import_src.atpkg"
-        guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
+        guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
 
         try test.assert(package.tasks["import_dst.build"] != nil)
         try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
@@ -62,34 +62,50 @@ class PackageTests: Test {
 
     static func testOverlays() throws {
         let filepath = "./tests/collateral/overlays.atpkg"
-        guard let package = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
+        guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
         guard let compileOptions = package.tasks["build"]?["compileOptions"]?.vector else {
             fatalError("No compile options?")
         }
-        try test.assert(compileOptions.count == 4)
+        try test.assert(compileOptions.count == 2)
         try test.assert(compileOptions[0].string == "-D")
         try test.assert(compileOptions[1].string == "AWESOME")
-        try test.assert(compileOptions[2].string == "-D")
-        try test.assert(compileOptions[3].string == "MORE_AWESOME")
 
-        guard let package2 = Package(filepath: filepath, configurations: ["awesome":"most"]) else { print("error"); try test.assert(false); return }
+        guard let package2 = Package(filepath: filepath, overlay: ["more-awesome"]) else { print("error"); try test.assert(false); return }
         guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {
             fatalError("no compile options?")
         }
-        try test.assert(compileOptions2.count == 6)
+        try test.assert(compileOptions2.count == 4)
         try test.assert(compileOptions2[0].string == "-D")
         try test.assert(compileOptions2[1].string == "AWESOME")
         try test.assert(compileOptions2[2].string == "-D")
         try test.assert(compileOptions2[3].string == "MORE_AWESOME")
-        try test.assert(compileOptions2[4].string == "-D")
-        try test.assert(compileOptions2[5].string == "MOST_AWESOME")
+
+        guard let package3 = Package(filepath: filepath, overlay: ["most-taskspecific"]) else { print("error"); try test.assert(false); return }
+        guard let compileOptions3 = package3.tasks["build"]?["compileOptions"]?.vector else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions3.count == 4)
+        try test.assert(compileOptions3[0].string == "-D")
+        try test.assert(compileOptions3[1].string == "AWESOME")
+        try test.assert(compileOptions3[2].string == "-D")
+        try test.assert(compileOptions3[3].string == "MOST_AWESOME")
+
+        guard let package4 = Package(filepath: filepath, overlay: ["most-taskspecific-two"]) else { print("error"); try test.assert(false); return }
+        guard let compileOptions4 = package4.tasks["build"]?["compileOptions"]?.vector else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions4.count == 4)
+        try test.assert(compileOptions4[0].string == "-D")
+        try test.assert(compileOptions4[1].string == "AWESOME")
+        try test.assert(compileOptions4[2].string == "-D")
+        try test.assert(compileOptions4[3].string == "MOST_AWESOME")
 
     }
 
     static func testExportedOverlays() throws {
         let filepath = "./tests/collateral/overlays_src.atpkg"
 
-        guard let package2 = Package(filepath: filepath, configurations: [:]) else { print("error"); try test.assert(false); return }
+        guard let package2 = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
         guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {
             fatalError("no compile options?")
         }

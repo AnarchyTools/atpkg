@@ -18,7 +18,7 @@
         :output-type "lib" 
         :source [ "src/**.swift" "lib/**.swift" ]
         :compileOptions ["-D" "AWESOME"]
-        :overlays ["sample-overlay" "overlays_dst.exported-overlay"]
+        :overlay ["sample-overlay" "overlays_dst.exported-overlay"]
     }
 }
 )

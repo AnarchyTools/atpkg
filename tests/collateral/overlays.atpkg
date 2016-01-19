@@ -5,10 +5,13 @@
 :version "0.1.0-dev"
 
 :overlays {
-    :sample-overlay {
+    :awesome {
+        :compileOptions ["-D" "AWESOME"]
+    }
+    :more-awesome {
         :compileOptions ["-D" "MORE_AWESOME"]
     }
-    :sample-overlay-two {
+    :most-awesome {
         :compileOptions ["-D" "MOST_AWESOME"]
     }
 }
@@ -19,10 +22,15 @@
         :name "json-swift"
         :output-type "lib" 
         :source [ "src/**.swift" "lib/**.swift" ]
-        :compileOptions ["-D" "AWESOME"]
-        :overlays ["sample-overlay"]
-        :configurations {
-            :awesome ["sample-overlay-two"]
+        :compileOptions []
+        :overlay ["awesome"]
+        :overlays {
+            :most-taskspecific {
+                :overlay ["most-awesome"]
+            }
+            :most-taskspecific-two {
+                :compileOptions ["-D" "MOST_AWESOME"]
+            }
         }
     }
 }
