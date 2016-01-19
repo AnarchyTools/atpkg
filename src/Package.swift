@@ -264,8 +264,6 @@ final public class Package {
             }
             if !again { break }
         }
-        
-
 
         //warn about unused global overlays
         for requestedOverlay in requestedGlobalOverlays {
@@ -276,9 +274,11 @@ final public class Package {
 
         //load remote tasks
         for remotePackage in remotePackages {
-            for task in remotePackage.tasks.keys {
-                remotePackage.tasks[task]!.importedPath = remotePackage.adjustedImportPath
-                self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
+            for (_, task) in remotePackage.tasks {
+                task.importedPath = remotePackage.adjustedImportPath
+                task.key = "\(remotePackage.name).\(task.key)"
+                print("installing task as \(task.key)")
+                self.tasks[task.key] = task
             }
         }
 
