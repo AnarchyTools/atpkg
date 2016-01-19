@@ -53,7 +53,7 @@ final public class Task {
             for (name, overlay) in overlays {
 
                 guard let innerOverlay = overlay.map else {
-                    fatalError("non-map oberlay \(overlay)")
+                    fatalError("non-map overlay \(overlay)")
                 }
                 self.declaredOverlays[name] = innerOverlay
             }
@@ -255,7 +255,8 @@ final public class Package {
                     if task.appliedOverlays.contains(overlayName) { continue }
 
                     guard let overlay = declaredOverlays[overlayName] else {
-                        fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
+                        print("Warning: Can't apply overlay \(overlayName) to task \(task.key)")
+                        continue
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
                     usedGlobalOverlays.append(overlayName)
