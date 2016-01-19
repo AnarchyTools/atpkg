@@ -21,6 +21,8 @@ final public class Task {
 
     var mixins: [String] = [] ///The mixins we should apply to this task
     
+    public var allKeys: [String]
+    
     private var kvp: [String:ParseValue]
 
     init?(value: ParseValue, name: String, importedPath: String) {
@@ -28,6 +30,7 @@ final public class Task {
         self.importedPath = importedPath.pathWithTrailingSlash
         self.kvp = kvp
         self.key = name
+        self.allKeys = [String](kvp.keys)
         self.tool = kvp["tool"]?.string ?? self.tool
         if let mixins = kvp["mixins"]?.vector {
             for mixin in mixins {

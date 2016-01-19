@@ -23,7 +23,7 @@ public func collectSources(sourceDescriptions: [String], task: Task) -> [String]
         let description = task.importedPath + unPrefixedDescription
         if description.hasSuffix("**.swift") {
             let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
-            let manager = NSFileManager.defaultManager()
+
             guard let enumerator = ICantBelieveItsNotFoundation_enumeratorAtPath(basepath) else {
                 fatalError("Invalid path \(basepath)")
             }
