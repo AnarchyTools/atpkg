@@ -19,6 +19,8 @@ final public class Task {
     public var tool: String = "atllbuild"
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
     
+    public var allKeys: [String]
+    
     private var kvp: [String:ParseValue]
 
     init?(value: ParseValue, name: String, importedPath: String) {
@@ -26,6 +28,7 @@ final public class Task {
         self.importedPath = importedPath.pathWithTrailingSlash
         self.kvp = kvp
         self.key = name
+        self.allKeys = [String](kvp.keys)
         self.tool = kvp["tool"]?.string ?? self.tool
 
         if let values = kvp["dependencies"]?.vector {
