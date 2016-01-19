@@ -18,6 +18,11 @@ final public class Task {
     public var dependencies: [String] = []
     public var tool: String = "atllbuild"
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
+
+    var overlay: [String] = [] ///The overlays we should apply to this task
+    var appliedOverlays: [String] = [] ///The overlays we did apply to this task
+
+    var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
     
     public var allKeys: [String]
     
@@ -30,6 +35,29 @@ final public class Task {
         self.key = name
         self.allKeys = [String](kvp.keys)
         self.tool = kvp["tool"]?.string ?? self.tool
+        if let ol = kvp["overlay"] {
+            guard let overlays = ol.vector else {
+                fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
+            }
+            for overlay in overlays {
+                guard let str = overlay.string else {
+                    fatalError("Non-string overlay \(overlay)")
+                }
+                self.overlay.append(str)
+            }
+        }
+        if let ol = kvp["overlays"] {
+            guard let overlays = ol.map else {
+                fatalError("Non-map overlays \(ol); did you mean to use `overlay` instead?")
+            }
+            for (name, overlay) in overlays {
+
+                guard let innerOverlay = overlay.map else {
+                    fatalError("non-map oberlay \(overlay)")
+                }
+                self.declaredOverlays[name] = innerOverlay
+            }
+        }
 
         if let values = kvp["dependencies"]?.vector {
             for value in values {
@@ -41,6 +69,41 @@ final public class Task {
     public subscript(key: String) -> ParseValue? {
         return kvp[key]
     }
+
+    /**Apply the overlay to the receiver
+- warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
+- return: whether the overlay applied another overlay */
+    @warn_unused_result
+    private func applyOverlay(name: String, overlay: [String: ParseValue]) -> Bool {
+        precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
+        for (optionName, optionValue) in overlay {
+            guard let vectorValue = optionValue.vector else {
+                fatalError("Unsupported non-vector type \(optionValue)")
+            }
+            guard let existingValue = self[optionName]?.vector else {
+                fatalError("Can't overlay on \(self.key)[\(optionName)]")
+            }
+
+            guard let optionValueVec = optionValue.vector else {
+                fatalError("Non-vector option value \(optionValue)")
+            }
+            var newValue = existingValue
+            newValue.appendContentsOf(optionValueVec)
+            self.kvp[optionName] = ParseValue.Vector(newValue)
+
+            //apply overlays to the model property
+            if optionName == "overlay" {
+                for overlayName in optionValueVec {
+                    guard let overlayNameStr = overlayName.string else {
+                        fatalError("Non-string overlayname \(overlayName)")
+                    }
+                    self.overlay.append(overlayNameStr)
+                }
+            }
+        }
+        appliedOverlays.append(name)
+        return overlay.keys.contains("overlay")
+    }
 }
 
 final public class Package {
@@ -50,6 +113,9 @@ final public class Package {
     // The optional properties. All optional properties must have a default value.
     public var version: String = ""
     public var tasks: [String:Task] = [:]
+
+    var overlays: [String: [String: ParseValue]] = [:]
+    var adjustedImportPath: String = ""
 
     /**Calculate the pruned dependency graph for the given task
 - returns: A list of tasks in a reasonable order to be processed. */
@@ -75,13 +141,16 @@ final public class Package {
         self.name = name
     }
     
-    public convenience init?(filepath: String, configurations: [String: String] = [:]) {
+    /**Create the package.
+- parameter filepath: The path to the file to load
+- parameter overlay: A list of overlays to apply globally to all tasks in the package. */
+    public convenience init?(filepath: String, overlay: [String]) {
         guard let parser = Parser(filepath: filepath) else { return nil }
         
         do {
             let result = try parser.parse()
             let basepath = filepath.toNSString.stringByDeletingLastPathComponent
-            self.init(type: result, configurations: configurations, pathOnDisk:basepath)
+            self.init(type: result, overlay: overlay, pathOnDisk:basepath)
         }
         catch {
             print("error: \(error)")
@@ -89,7 +158,7 @@ final public class Package {
         }
     }
     
-    public init?(type: ParseType, configurations: [String: String], pathOnDisk: String) {
+    public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
         if type.name != "package" { return nil }
         
         if let value = type.properties["name"]?.string { self.name = value }
@@ -107,48 +176,90 @@ final public class Package {
             }
         }
 
-        //swap in configurations
-        for requestedConfiguration in configurations.keys {
-            let requestedConfigurationValue = configurations[requestedConfiguration]!
-            //find the overrides specific to this configuration
-            guard let parsedConfigurations = type.properties["configurations"]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) but no configurations were present in the package file.")
-            }
-            guard let parsedConfiguration = parsedConfigurations[requestedConfiguration]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) but we only have \(Array(parsedConfigurations.keys))")
-            }
-            guard let overrideSpecifications = parsedConfiguration[requestedConfigurationValue]?.map else {
-                fatalError("You requested configuration --\(requestedConfiguration) \(requestedConfigurationValue) but we only have \(Array(parsedConfiguration.keys))")
-            }
-            for taskSpec in overrideSpecifications.keys {
-                guard let overrideSpecification = overrideSpecifications[taskSpec]?.map else {
-                    fatalError("Cannot get override specification for --\(requestedConfiguration) \(requestedConfigurationValue)")
-                }
-                if let task = tasks[taskSpec] {
-                    for(k,v) in overrideSpecification {
-                        task.kvp[k] = v
-                    }
-                }
-                else {
-                    fatalError("Global configurations not implemented; can't configure option \(requestedConfigurationValue) for non-task spec \(taskSpec)")
-                }
-            }
-        }
+        var remotePackages: [Package] = []
 
-        //load imported tasks
+        //load remote packages
         if let imports = type.properties["import"]?.vector {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
                 let adjustedFileName = importFileString.toNSString.lastPathComponent
-                guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, configurations: configurations) else {
+                guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays) else {
                     fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
                 }
-                for task in remotePackage.tasks.keys {
-                    remotePackage.tasks[task]!.importedPath = adjustedImportPath
-                    self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
-                }
+                remotePackage.adjustedImportPath = adjustedImportPath
+                remotePackages.append(remotePackage)
             }
         }
+
+        //load remote overlays
+        for remotePackage in remotePackages {
+            for (overlayName, value) in remotePackage.overlays {
+                self.overlays["\(remotePackage.name).\(overlayName)"] = value
+            }
+        }
+        
+        if let overlays = type.properties["overlays"]?.map {
+            for (name, overlay) in overlays {
+                guard let innerOverlay = overlay.map else {
+                    fatalError("Non-map overlay \(overlay)")
+                }
+                self.overlays[name] = innerOverlay
+            }
+        }
+
+        var usedGlobalOverlays : [String] = []
+        //swap in overlays
+
+        while true {
+            var again = false
+            for (name, task) in self.tasks {
+                //merge task-declared and globally-declared overlays
+                var declaredOverlays : [String: [String: ParseValue]] = [:]
+                for (k,v) in task.declaredOverlays {
+                    declaredOverlays[k] = v
+                }
+                for (k,v) in overlays {
+                    declaredOverlays[k] = v
+                }
+
+                for overlayName in task.overlay {
+                    if task.appliedOverlays.contains(overlayName) { continue }
+                    guard let overlay = declaredOverlays[overlayName] else {
+                        fatalError("Can't find overlay named \(overlayName) in \(overlays)")
+                    }
+                    again = again || task.applyOverlay(overlayName, overlay: overlay)
+                }
+                for overlayName in requestedGlobalOverlays {
+                    if task.appliedOverlays.contains(overlayName) { continue }
+
+                    guard let overlay = declaredOverlays[overlayName] else {
+                        fatalError("Can't find overlay named \(overlayName) in \(overlays)")
+                    }
+                    again = again || task.applyOverlay(overlayName, overlay: overlay)
+                    usedGlobalOverlays.append(overlayName)
+                }
+            }
+            if !again { break }
+        }
+        
+
+
+        //warn about unused global overlays
+        for requestedOverlay in requestedGlobalOverlays {
+            if !usedGlobalOverlays.contains(requestedOverlay) {
+                print("Warning: overlay \(requestedOverlay) had no effect.")
+            }
+        }
+
+        //load remote tasks
+        for remotePackage in remotePackages {
+            for task in remotePackage.tasks.keys {
+                remotePackage.tasks[task]!.importedPath = remotePackage.adjustedImportPath
+                self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
+            }
+        }
+
+
     }
 }

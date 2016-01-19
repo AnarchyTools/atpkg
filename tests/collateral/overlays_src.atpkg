@@ -1,0 +1,26 @@
+;; An overlay sample file
+
+(package
+:name "overlays_src"
+:version "0.1.0-dev"
+:import ["overlays_dst.atpkg"]
+
+:overlays {
+    :sample-overlay {
+        :compileOptions ["-D" "MORE_AWESOME"]
+    }
+}
+
+:tasks {
+    :build {
+        :tool "lldb-build"
+        :name "json-swift"
+        :output-type "lib" 
+        :source [ "src/**.swift" "lib/**.swift" ]
+        :compileOptions ["-D" "AWESOME"]
+        :overlay ["sample-overlay" "overlays_dst.exported-overlay"]
+    }
+}
+)
+
+; End of the sample.
