@@ -22,7 +22,8 @@ class PackageTests: Test {
         PackageTests.testBasic,
         PackageTests.testImport,
         PackageTests.testOverlays,
-        PackageTests.testExportedOverlays
+        PackageTests.testExportedOverlays,
+        PackageTests.testExtraBrace
     ]
 
     let filename = __FILE__
@@ -116,6 +117,16 @@ class PackageTests: Test {
         try test.assert(compileOptions2[3].string == "MORE_AWESOME")
         try test.assert(compileOptions2[4].string == "-D")
         try test.assert(compileOptions2[5].string == "MOST_AWESOME")
+
+    }
+
+    static func testExtraBrace() throws {
+        let filepath = "./tests/collateral/extra-brace.atpkg"
+
+        if let package2 = Package(filepath: filepath, overlay: []) {
+            fatalError("Should have reported an error when leaving unparsed substantive data")
+        }
+    
 
     }
 }

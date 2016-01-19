@@ -1,0 +1,22 @@
+(package
+  :name "extra-brace"
+
+  :overlays {
+        :got-overlay {
+            :compileOptions ["-D" "GOT_OVERLAY"]
+        }
+  } ;;this extra brace is erroneous.
+  } ;;because this brace is erroneous, the paren on line 1 is actually unmatched
+    ;;yet this condition is not reported as an error.
+  
+  ;;meanwhile, all this data will go unparsed
+  ;;which is probably unexpected
+  :tasks {
+      :default {
+        :tool "atllbuild"
+        :source ["src/**.swift"]
+        :name "no-tasks-bug"
+        :outputType "static-library"
+      }
+  }
+)
