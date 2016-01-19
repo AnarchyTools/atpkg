@@ -210,8 +210,10 @@ final public class Package {
                 self.overlays["\(remotePackage.name).\(overlayName)"] = value
             }
         }
-        
-        if let overlays = type.properties["overlays"]?.map {
+        if let ol = type.properties["overlays"] {
+            guard let overlays = ol.map else {
+                fatalError("Non-map overlay \(ol)")
+            }
             for (name, overlay) in overlays {
                 guard let innerOverlay = overlay.map else {
                     fatalError("Non-map overlay \(overlay)")
@@ -238,7 +240,7 @@ final public class Package {
                 for overlayName in task.overlay {
                     if task.appliedOverlays.contains(overlayName) { continue }
                     guard let overlay = declaredOverlays[overlayName] else {
-                        fatalError("Can't find overlay named \(overlayName) in \(overlays)")
+                        fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
                 }
@@ -246,7 +248,7 @@ final public class Package {
                     if task.appliedOverlays.contains(overlayName) { continue }
 
                     guard let overlay = declaredOverlays[overlayName] else {
-                        fatalError("Can't find overlay named \(overlayName) in \(overlays)")
+                        fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
                     usedGlobalOverlays.append(overlayName)
