@@ -77,29 +77,40 @@ final public class Task {
     private func applyOverlay(name: String, overlay: [String: ParseValue]) -> Bool {
         precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
         for (optionName, optionValue) in overlay {
-            guard let vectorValue = optionValue.vector else {
-                fatalError("Unsupported non-vector type \(optionValue)")
-            }
-            guard let existingValue = self[optionName]?.vector else {
-                fatalError("Can't overlay on \(self.key)[\(optionName)]")
-            }
-
-            guard let optionValueVec = optionValue.vector else {
-                fatalError("Non-vector option value \(optionValue)")
-            }
-            var newValue = existingValue
-            newValue.appendContentsOf(optionValueVec)
-            self.kvp[optionName] = ParseValue.Vector(newValue)
-
-            //apply overlays to the model property
-            if optionName == "overlay" {
-                for overlayName in optionValueVec {
-                    guard let overlayNameStr = overlayName.string else {
-                        fatalError("Non-string overlayname \(overlayName)")
-                    }
-                    self.overlay.append(overlayNameStr)
+            switch(optionValue) {
+                case ParseValue.Vector(let vectorValue):
+                guard let existingValue = self[optionName]?.vector else {
+                    fatalError("Can't overlay on \(self.key)[\(optionName)]")
                 }
+
+                guard let optionValueVec = optionValue.vector else {
+                    fatalError("Non-vector option value \(optionValue)")
+                }
+                var newValue = existingValue
+                newValue.appendContentsOf(optionValueVec)
+                self.kvp[optionName] = ParseValue.Vector(newValue)
+                //apply overlays to the model property
+                if optionName == "overlay" {
+                    for overlayName in optionValueVec {
+                        guard let overlayNameStr = overlayName.string else {
+                            fatalError("Non-string overlayname \(overlayName)")
+                        }
+                        self.overlay.append(overlayNameStr)
+                    }
+                }
+
+                case ParseValue.StringLiteral(let str):
+                if let existingValue = self[optionName] {
+                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value")
+                }
+                self.kvp[optionName] = ParseValue.StringLiteral(str)
+
+                default:
+                fatalError("Canot overlay value \(optionValue); please file a bug")
             }
+            
+
+            
         }
         appliedOverlays.append(name)
         return overlay.keys.contains("overlay")

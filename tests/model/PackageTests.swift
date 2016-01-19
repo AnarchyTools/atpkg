@@ -100,6 +100,11 @@ class PackageTests: Test {
         try test.assert(compileOptions4[2].string == "-D")
         try test.assert(compileOptions4[3].string == "MOST_AWESOME")
 
+        guard let package5 = Package(filepath: filepath, overlay: ["stringOption"]) else { print("error"); try test.assert(false); return }
+        guard let stringOption = package5.tasks["build"]?["stringOption"]?.string else {
+            fatalError("no string option?")
+        }
+
     }
 
     static func testExportedOverlays() throws {
