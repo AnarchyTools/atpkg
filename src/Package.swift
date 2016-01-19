@@ -87,16 +87,12 @@ final public class Task {
                 else {
                     existingValue = []
                 }
-
-                guard let optionValueVec = optionValue.vector else {
-                    fatalError("Non-vector option value \(optionValue)")
-                }
                 var newValue = existingValue
-                newValue.appendContentsOf(optionValueVec)
+                newValue.appendContentsOf(vectorValue)
                 self.kvp[optionName] = ParseValue.Vector(newValue)
                 //apply overlays to the model property
                 if optionName == "overlay" {
-                    for overlayName in optionValueVec {
+                    for overlayName in vectorValue {
                         guard let overlayNameStr = overlayName.string else {
                             fatalError("Non-string overlayname \(overlayName)")
                         }
@@ -106,7 +102,7 @@ final public class Task {
 
                 case ParseValue.StringLiteral(let str):
                 if let existingValue = self[optionName] {
-                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value")
+                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value \(existingValue)")
                 }
                 self.kvp[optionName] = ParseValue.StringLiteral(str)
 
@@ -229,7 +225,7 @@ final public class Package {
 
         while true {
             var again = false
-            for (name, task) in self.tasks {
+            for (_, task) in self.tasks {
                 //merge task-declared and globally-declared overlays
                 var declaredOverlays : [String: [String: ParseValue]] = [:]
                 for (k,v) in task.declaredOverlays {
