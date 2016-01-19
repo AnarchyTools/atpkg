@@ -26,8 +26,8 @@ final public class Scanner {
 
     private var shouldStall = false
 
-    var line: Int = 0
-    var column: Int = 0 
+    var line: Int = 1
+    var column: Int = 1 
 
     public init(content: String) {
         self.content = content
@@ -37,8 +37,8 @@ final public class Scanner {
 
     func _defaults() {
         self.index = content.startIndex
-        self.line = 0
-        self.column = 0
+        self.line = 1
+        self.column = 1
         self.shouldStall = false
         self.current = nil
    }
@@ -62,7 +62,7 @@ final public class Scanner {
 
             if current?.character == "\n" {
                 line += 1
-                column = 0 
+                column = 1 
             }
             else {
                 column += 1
