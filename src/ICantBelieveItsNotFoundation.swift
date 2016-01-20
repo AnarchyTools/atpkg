@@ -27,6 +27,19 @@ extension String {
     public func stringByReplacingOccurrencesOfString(target: String, withString replacement: String) -> String {
         return self.bridge().stringByReplacingOccurrencesOfString(target, withString: replacement)
     }
+
+    public func subStringWithRange(range: Range<String.Index>) -> String {
+        var result = ""
+        result.reserveCapacity(range.count)
+        for idx in range {
+            result.append(self.characters[idx])
+        }
+        return result
+    }
+    
+    public func substringToIndex(index: Int) -> String {
+        return self.subStringWithRange(self.startIndex..<self.startIndex.advancedBy(index))
+    }
     #endif
 }
 extension NSString {
