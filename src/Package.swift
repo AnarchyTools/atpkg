@@ -347,7 +347,6 @@ final public class Package {
             for (_, task) in remotePackage.tasks {
                 task.importedPath = remotePackage.adjustedImportPath
                 task.key = "\(remotePackage.name).\(task.key)"
-                print("installing task as \(task.key)")
                 self.tasks[task.key] = task
             }
         }
