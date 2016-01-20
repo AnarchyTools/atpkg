@@ -1,0 +1,6 @@
+bin/
+.atllbuild/
+.built/
+
+*xcuserdata*
+.DS_Store

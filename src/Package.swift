@@ -11,15 +11,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import Foundation
 
+
+/**
+ * A config map is a mapping of string values and config values. This is the
+ * primary mechanism used for merging overlays.
+ */
+public typealias ConfigMap = [String:ParseValue]
+
+/**
+ * A config value is one of the supported value types within the config system.
+ */
+public typealias ConfigValue = ParseValue
+
+
+/**
+ * A task represents an action that can be performed by the `atbuild` system.
+ */
 final public class Task {
+    /** This is the key the task is stored under in the package file. */
     public var key: String = ""
+    
+    /** This is the map of all of the settings stored for the task. */
+    public var map: ConfigMap = [:]
+    
     public var dependencies: [String] = []
     public var tool: String = "atllbuild"
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
 
-    var overlay: [String] = [] ///The overlays we should apply to this task
+    var useOverlays: [String] = [] ///The overlays we should apply to this task
     var appliedOverlays: [String] = [] ///The overlays we did apply to this task
 
     var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
@@ -35,7 +57,7 @@ final public class Task {
         self.key = name
         self.allKeys = [String](kvp.keys)
         self.tool = kvp["tool"]?.string ?? self.tool
-        if let ol = kvp["overlay"] {
+        if let ol = kvp["use-overlays"] {
             guard let overlays = ol.vector else {
                 fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
             }
@@ -43,7 +65,7 @@ final public class Task {
                 guard let str = overlay.string else {
                     fatalError("Non-string overlay \(overlay)")
                 }
-                self.overlay.append(str)
+                self.useOverlays.append(str)
             }
         }
         if let ol = kvp["overlays"] {
@@ -91,12 +113,12 @@ final public class Task {
                 newValue.appendContentsOf(vectorValue)
                 self.kvp[optionName] = ParseValue.Vector(newValue)
                 //apply overlays to the model property
-                if optionName == "overlay" {
+                if optionName == "use-overlays" {
                     for overlayName in vectorValue {
                         guard let overlayNameStr = overlayName.string else {
                             fatalError("Non-string overlayname \(overlayName)")
                         }
-                        self.overlay.append(overlayNameStr)
+                        self.useOverlays.append(overlayNameStr)
                     }
                 }
 
@@ -121,7 +143,7 @@ final public class Task {
             
         }
         appliedOverlays.append(name)
-        return overlay.keys.contains("overlay")
+        return overlay.keys.contains("use-overlays")
     }
 }
 
@@ -244,7 +266,7 @@ final public class Package {
                     declaredOverlays[k] = v
                 }
 
-                for overlayName in task.overlay {
+                for overlayName in task.useOverlays {
                     if task.appliedOverlays.contains(overlayName) { continue }
                     guard let overlay = declaredOverlays[overlayName] else {
                         fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")

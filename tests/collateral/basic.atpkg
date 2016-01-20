@@ -4,10 +4,14 @@
   :name "basic"
   :version "0.1.0-dev"
   
-  :tasks {:build {:tool "lldb-build"
-                  :name "json-swift"
-                  :output-type "lib" 
-                  :source [ "src/**.swift" "lib/**.swift" ]}}
+  :tasks {
+    :build {
+      :tool "lldb-build"
+      :name "json-swift"
+      :output-type "lib" 
+      :source ["src/**.swift" "lib/**.swift"]
+    }
+  }
 )
 
 ; End of the sample.

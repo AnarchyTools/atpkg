@@ -63,7 +63,7 @@ class PackageTests: Test {
     static func testOverlays() throws {
         let filepath = "./tests/collateral/overlays.atpkg"
         guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
-        guard let compileOptions = package.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions = package.tasks["build"]?["compile-options"]?.vector else {
             fatalError("No compile options?")
         }
         try test.assert(compileOptions.count == 2)
@@ -71,7 +71,7 @@ class PackageTests: Test {
         try test.assert(compileOptions[1].string == "AWESOME")
 
         guard let package2 = Package(filepath: filepath, overlay: ["more-awesome"]) else { print("error"); try test.assert(false); return }
-        guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions2 = package2.tasks["build"]?["compile-options"]?.vector else {
             fatalError("no compile options?")
         }
         try test.assert(compileOptions2.count == 4)
@@ -81,7 +81,7 @@ class PackageTests: Test {
         try test.assert(compileOptions2[3].string == "MORE_AWESOME")
 
         guard let package3 = Package(filepath: filepath, overlay: ["most-taskspecific"]) else { print("error"); try test.assert(false); return }
-        guard let compileOptions3 = package3.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions3 = package3.tasks["build"]?["compile-options"]?.vector else {
             fatalError("no compile options?")
         }
         try test.assert(compileOptions3.count == 4)
@@ -91,7 +91,7 @@ class PackageTests: Test {
         try test.assert(compileOptions3[3].string == "MOST_AWESOME")
 
         guard let package4 = Package(filepath: filepath, overlay: ["most-taskspecific-two"]) else { print("error"); try test.assert(false); return }
-        guard let compileOptions4 = package4.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions4 = package4.tasks["build"]?["compile-options"]?.vector else {
             fatalError("no compile options?")
         }
         try test.assert(compileOptions4.count == 4)
@@ -100,22 +100,22 @@ class PackageTests: Test {
         try test.assert(compileOptions4[2].string == "-D")
         try test.assert(compileOptions4[3].string == "MOST_AWESOME")
 
-        guard let package5 = Package(filepath: filepath, overlay: ["stringOption"]) else { print("error"); try test.assert(false); return }
-        guard let stringOption = package5.tasks["build"]?["stringOption"]?.string else {
+        guard let package5 = Package(filepath: filepath, overlay: ["string-option"]) else { print("error"); try test.assert(false); return }
+        guard let stringOption = package5.tasks["build"]?["string-option"]?.string else {
             fatalError("no string option?")
         }
         try test.assert(stringOption == "stringOption")
 
-        guard let package6 = Package(filepath: filepath, overlay: ["emptyVecOption"]) else { print("error"); try test.assert(false); return }
-        guard let vecOption = package6.tasks["build"]?["emptyVecOption"]?.vector else {
+        guard let package6 = Package(filepath: filepath, overlay: ["empty-vec-option"]) else { print("error"); try test.assert(false); return }
+        guard let vecOption = package6.tasks["build"]?["empty-vec-option"]?.vector else {
             fatalError("no vec option?")
         }
         try test.assert(vecOption.count == 1)
 
         try test.assert(vecOption[0].string == "OVERLAY")
 
-        guard let package7 = Package(filepath: filepath, overlay: ["boolOption"]) else { print("error"); try test.assert(false); return }
-        guard let boolOption = package7.tasks["build"]?["boolOption"]?.bool else {
+        guard let package7 = Package(filepath: filepath, overlay: ["bool-option"]) else { print("error"); try test.assert(false); return }
+        guard let boolOption = package7.tasks["build"]?["bool-option"]?.bool else {
             fatalError("no bool option?")
         }
         try test.assert(boolOption == true)
@@ -125,7 +125,7 @@ class PackageTests: Test {
         let filepath = "./tests/collateral/overlays_src.atpkg"
 
         guard let package2 = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
-        guard let compileOptions2 = package2.tasks["build"]?["compileOptions"]?.vector else {
+        guard let compileOptions2 = package2.tasks["build"]?["compile-options"]?.vector else {
             fatalError("no compile options?")
         }
         try test.assert(compileOptions2.count == 6)
