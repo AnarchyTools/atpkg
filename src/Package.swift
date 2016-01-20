@@ -13,6 +13,41 @@
 // limitations under the License.
 import Foundation
 
+final public class ExternalDependency {
+    public enum VersioningMethod {
+        case Version(major: Range<Int>, minor: Range<Int>)
+        case Commit(String)
+        case Branch(String)
+    }
+
+    public var gitURL: String
+    public var version: VersioningMethod
+    
+    public var name: String {
+        let lastComponent = gitURL.toNSString.lastPathComponent
+        if lastComponent.hasSuffix(".git") {
+            return lastComponent.substringToIndex(lastComponent.startIndex.advancedBy(lastComponent.characters.count - 4))
+        }
+        return lastComponent
+    }
+
+    init?(url: String, version: String) {
+        print("Not implemented yet")
+        self.gitURL = url
+        self.version = .Version(major: 0...0, minor: 0...0)
+    }
+
+    init?(url: String, commit: String) {
+        self.gitURL = url
+        self.version = .Commit(commit)
+    }
+
+    init?(url: String, branch: String) {
+        self.gitURL = url
+        self.version = .Branch(branch)
+    }
+}
+
 final public class Task {
     public var key: String = ""
     public var dependencies: [String] = []
@@ -23,9 +58,9 @@ final public class Task {
     var appliedOverlays: [String] = [] ///The overlays we did apply to this task
 
     var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
-    
+
     public var allKeys: [String]
-    
+
     private var kvp: [String:ParseValue]
 
     init?(value: ParseValue, name: String, importedPath: String) {
@@ -65,7 +100,7 @@ final public class Task {
             }
         }
     }
-    
+
     public subscript(key: String) -> ParseValue? {
         return kvp[key]
     }
@@ -128,10 +163,11 @@ final public class Task {
 final public class Package {
     // The required properties.
     public var name: String
-    
+
     // The optional properties. All optional properties must have a default value.
     public var version: String = ""
     public var tasks: [String:Task] = [:]
+    public var externals: [ExternalDependency] = []
 
     var overlays: [String: [String: ParseValue]] = [:]
     var adjustedImportPath: String = ""
@@ -155,17 +191,17 @@ final public class Package {
         pruned.append(task)
         return pruned
     }
-    
+
     public init(name: String) {
         self.name = name
     }
-    
+
     /**Create the package.
 - parameter filepath: The path to the file to load
 - parameter overlay: A list of overlays to apply globally to all tasks in the package. */
     public convenience init?(filepath: String, overlay: [String]) {
         guard let parser = Parser(filepath: filepath) else { return nil }
-        
+
         do {
             let result = try parser.parse()
             let basepath = filepath.toNSString.stringByDeletingLastPathComponent
@@ -176,10 +212,10 @@ final public class Package {
             return nil
         }
     }
-    
+
     public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
         if type.name != "package" { return nil }
-        
+
         if let value = type.properties["name"]?.string { self.name = value }
         else {
             print("ERROR: No name specified for the package.")
@@ -211,6 +247,40 @@ final public class Package {
             }
         }
 
+        // load external dependencies
+        if let externalDeps = type.properties["externals"]?.vector {
+            for dep in externalDeps {
+                guard let d = dep.map else { fatalError("Non-Map external dependency declaration") }
+                guard let url = d["url"]?.string else { fatalError("No URL in dependency declaration") }
+                var externalDep: ExternalDependency? = nil
+                if let version = d["version"]?.string {
+                    externalDep = ExternalDependency(url: url, version: version)
+                } else if let branch = d["branch"]?.string {
+                    externalDep = ExternalDependency(url: url, branch: branch)
+                } else if let commit = d["commit"]?.string {
+                    externalDep = ExternalDependency(url: url, commit: commit)
+                }
+                if let externalDep = externalDep {
+                    // add to external deps
+                    self.externals.append(externalDep)
+                    var importFileString = "external/" + externalDep.name + "/build.atpkg"
+                    
+                    // import the atbuild file if it is there
+                    let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
+                    let adjustedFileName = importFileString.toNSString.lastPathComponent
+                    if let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays) {
+                        remotePackage.adjustedImportPath = adjustedImportPath
+                        remotePackages.append(remotePackage)
+                    } else {
+                        print("Unsatisfied external dependency: \(externalDep.name), run atpm fetch")
+                    }
+                } else {
+                    fatalError("Could not parse external dependency declaration for \(url)")
+                }
+            }
+        }
+
+        
         //load remote overlays
         for remotePackage in remotePackages {
             for (overlayName, value) in remotePackage.overlays {
