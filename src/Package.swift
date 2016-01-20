@@ -263,7 +263,7 @@ final public class Package {
                 if let externalDep = externalDep {
                     // add to external deps
                     self.externals.append(externalDep)
-                    var importFileString = "external/" + externalDep.name + "/build.atpkg"
+                    let importFileString = "external/" + externalDep.name + "/build.atpkg"
                     
                     // import the atbuild file if it is there
                     let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
