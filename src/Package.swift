@@ -15,9 +15,10 @@ import Foundation
 
 final public class ExternalDependency {
     public enum VersioningMethod {
-        case Version(major: Range<Int>, minor: Range<Int>)
+        case Version([String])
         case Commit(String)
         case Branch(String)
+        case Tag(String)
     }
 
     public var gitURL: String
@@ -31,10 +32,9 @@ final public class ExternalDependency {
         return lastComponent
     }
 
-    init?(url: String, version: String) {
-        print("Not implemented yet")
+    init?(url: String, version: [String]) {
         self.gitURL = url
-        self.version = .Version(major: 0...0, minor: 0...0)
+        self.version = .Version(version)
     }
 
     init?(url: String, commit: String) {
@@ -45,6 +45,11 @@ final public class ExternalDependency {
     init?(url: String, branch: String) {
         self.gitURL = url
         self.version = .Branch(branch)
+    }
+
+    init?(url: String, tag: String) {
+        self.gitURL = url
+        self.version = .Tag(tag)
     }
 }
 
@@ -253,12 +258,22 @@ final public class Package {
                 guard let d = dep.map else { fatalError("Non-Map external dependency declaration") }
                 guard let url = d["url"]?.string else { fatalError("No URL in dependency declaration") }
                 var externalDep: ExternalDependency? = nil
-                if let version = d["version"]?.string {
-                    externalDep = ExternalDependency(url: url, version: version)
+                if let version = d["version"]?.vector {
+                    var versionDecl = [String]()
+                    for ver in version {
+                        if let v = ver.string {
+                            versionDecl.append(v)
+                        } else {
+                            fatalError("Could not parse external dependency version declaration for \(url)")
+                        }
+                    }
+                    externalDep = ExternalDependency(url: url, version: versionDecl)
                 } else if let branch = d["branch"]?.string {
                     externalDep = ExternalDependency(url: url, branch: branch)
                 } else if let commit = d["commit"]?.string {
                     externalDep = ExternalDependency(url: url, commit: commit)
+                } else if let tag = d["tag"]?.string {
+                    externalDep = ExternalDependency(url: url, tag: tag)
                 }
                 if let externalDep = externalDep {
                     // add to external deps
