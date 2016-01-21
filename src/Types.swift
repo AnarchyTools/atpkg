@@ -21,26 +21,63 @@ public typealias ConfigMap = [String:Value]
 /**
  * Merges a set of config maps in reverse order of precedence.
  */
-public func mergeConfigs(configs: [ConfigMap]) -> ConfigMap {
-    return configs.reduce(ConfigMap()) { m1, m2 in
+public func mergeConfigs(configs: [ConfigMap]) throws -> ConfigMap {
+    return try configs.reduce(ConfigMap()) { m1, m2 in
         var copy = m1
         for (key, value) in m2 {
             switch value {
-            case .StringLiteral: copy[key] = value
-            case .IntegerLiteral: copy[key] = value
-            case .FloatLiteral: copy[key] = value
-            case .BoolLiteral: copy[key] = value
+            case .StringLiteral:
+                if copy[key]?.typeName == Value.StringType || copy[key]?.typeName == nil {
+                    copy[key] = value
+                }
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.StringType))
+                }
+                
+            case .IntegerLiteral:
+                if copy[key]?.typeName == Value.IntegerType || copy[key]?.typeName == nil {
+                    copy[key] = value
+                }
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.IntegerType))
+                }
+
+            case .FloatLiteral:
+                if copy[key]?.typeName == Value.FloatType || copy[key]?.typeName == nil {
+                    copy[key] = value
+                }
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.FloatType))
+                }
+
+            case .BoolLiteral:
+                if copy[key]?.typeName == Value.BoolType || copy[key]?.typeName == nil {
+                    copy[key] = value
+                }
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.BoolType))
+                }
                 
             case let .ArrayLiteral(items):
-                var newItems = copy[key]?.array ?? []
-                for item in items {
-                    newItems.append(item)
+                if copy[key]?.typeName == Value.ArrayType || copy[key]?.typeName == nil {
+                    var newItems = copy[key]?.array ?? []
+                    for item in items {
+                        newItems.append(item)
+                    }
+                    copy[key] = Value.ArrayLiteral(newItems)
                 }
-                copy[key] = Value.ArrayLiteral(newItems)
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.ArrayType))
+                }
                 
             case let .DictionaryLiteral(items):
-                let newItems = mergeConfigs([copy[key]?.dictionary ?? [:], items])
-                copy[key] = Value.DictionaryLiteral(newItems)
+                if copy[key]?.typeName == Value.DictionaryType || copy[key]?.typeName == nil {
+                    let newItems = try mergeConfigs([copy[key]?.dictionary ?? [:], items])
+                    copy[key] = Value.DictionaryLiteral(newItems)
+                }
+                else {
+                    throw PackageError(.InvalidDataType(value, Value.DictionaryType))
+                }
             }
             
         }

@@ -22,6 +22,7 @@ class PackageTests: Test {
         PackageTests.testBasic,
         PackageTests.testImport,
         PackageTests.testMergeConfigs,
+        PackageTests.testInvalidMergeConfigs,
         PackageTests.testOverlays,
         PackageTests.testExportedOverlays
     ]
@@ -75,7 +76,7 @@ class PackageTests: Test {
                 "nested": Value.DictionaryLiteral(["ok": .BoolLiteral(false)])])
         ]
 
-        let merged = mergeConfigs([map1, map2])
+        let merged = try mergeConfigs([map1, map2])
         try test.assert(merged["array"]?.array?[0].string == "happy")
         try test.assert(merged["array"]?.array?[1].string == "days")
         try test.assert(merged["array"]?.array?[2].string == "oh")
@@ -84,6 +85,30 @@ class PackageTests: Test {
         try test.assert(merged["map"]?.dictionary?["value"]?.string == "pair")
         try test.assert(merged["bool"]?.bool == false)
         try test.assert(merged["integer"]?.integer == 1234)
+    }
+    
+    static func testInvalidMergeConfigs() throws {
+        let map1: ConfigMap = [
+            "array" : Value.ArrayLiteral([.StringLiteral("happy"), .StringLiteral("days")]),
+            "map" : Value.DictionaryLiteral([
+                "key": .StringLiteral("value"),
+                "nested": Value.DictionaryLiteral(["ok": .BoolLiteral(true)])]),
+            "string": .StringLiteral("string-value"),
+            "integer": .IntegerLiteral(1234),
+            "float": .FloatLiteral(1.234),
+            "bool": .BoolLiteral(false)
+        ]
+
+        let map2: ConfigMap = [
+            "array" : .StringLiteral("fail")
+        ]
+
+        do {
+            let _ = try mergeConfigs([map1, map2])
+        }
+        catch { return }
+        
+        try test.assert(false)
     }
 
     static func testOverlays() throws {
