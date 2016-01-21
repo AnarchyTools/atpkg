@@ -103,11 +103,10 @@ public func overlayedConfigMap(package: Package, task: String, cli: ConfigMap? =
         task[Package.Keys.UseOverlays]?.array
     ]
         .flatMap { $0 }
-        .flatMap{ $0 }
-        .map { $0.string }
-        .filter { $0 != nil }
         .flatMap { $0 }
-
+        .map { $0.string }
+        .flatMap { $0 }
+        
     let packageOverlays = try packageConfigs(package, overlays: overlays)
     
     let taskOverlays = try mergeConfigs(overlays.map {
