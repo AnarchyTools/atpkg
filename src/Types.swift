@@ -19,6 +19,37 @@
 public typealias ConfigMap = [String:Value]
 
 /**
+ * Merges a set of config maps in reverse order of precedence.
+ */
+public func mergeConfigs(configs: [ConfigMap]) -> ConfigMap {
+    return configs.reduce(ConfigMap()) { m1, m2 in
+        var copy = m1
+        for (key, value) in m2 {
+            switch value {
+            case .StringLiteral: copy[key] = value
+            case .IntegerLiteral: copy[key] = value
+            case .FloatLiteral: copy[key] = value
+            case .BoolLiteral: copy[key] = value
+                
+            case let .ArrayLiteral(items):
+                var newItems = copy[key]?.array ?? []
+                for item in items {
+                    newItems.append(item)
+                }
+                copy[key] = Value.ArrayLiteral(newItems)
+                
+            case let .DictionaryLiteral(items):
+                let newItems = mergeConfigs([copy[key]?.dictionary ?? [:], items])
+                copy[key] = Value.DictionaryLiteral(newItems)
+            }
+            
+        }
+        
+        return copy
+    }
+}
+
+/**
  * Represents the top-level declaration defined within the package file.
  */
 final public class DeclarationType {

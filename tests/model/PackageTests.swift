@@ -21,6 +21,7 @@ class PackageTests: Test {
     let tests = [
         PackageTests.testBasic,
         PackageTests.testImport,
+        PackageTests.testMergeConfigs,
         PackageTests.testOverlays,
         PackageTests.testExportedOverlays
     ]
@@ -53,6 +54,36 @@ class PackageTests: Test {
         try test.assert(package.importedPackages[0].name == "import_dst")
         try test.assert(package.importedPackages[0].importedPackages.count == 1)
         try test.assert(package.importedPackages[0].importedPackages[0].name == "basic")
+    }
+    
+    static func testMergeConfigs() throws {
+        let map1: ConfigMap = [
+            "array" : Value.ArrayLiteral([.StringLiteral("happy"), .StringLiteral("days")]),
+            "map" : Value.DictionaryLiteral([
+                "key": .StringLiteral("value"),
+                "nested": Value.DictionaryLiteral(["ok": .BoolLiteral(true)])]),
+            "string": .StringLiteral("string-value"),
+            "integer": .IntegerLiteral(1234),
+            "float": .FloatLiteral(1.234),
+            "bool": .BoolLiteral(false)
+        ]
+
+        let map2: ConfigMap = [
+            "array" : Value.ArrayLiteral([.StringLiteral("oh")]),
+            "map" : Value.DictionaryLiteral([
+                "value": .StringLiteral("pair"),
+                "nested": Value.DictionaryLiteral(["ok": .BoolLiteral(false)])])
+        ]
+
+        let merged = mergeConfigs([map1, map2])
+        try test.assert(merged["array"]?.array?[0].string == "happy")
+        try test.assert(merged["array"]?.array?[1].string == "days")
+        try test.assert(merged["array"]?.array?[2].string == "oh")
+        try test.assert(merged["map"]?.dictionary?["nested"]?.dictionary?["ok"]?.bool == false)
+        try test.assert(merged["map"]?.dictionary?["key"]?.string == "value")
+        try test.assert(merged["map"]?.dictionary?["value"]?.string == "pair")
+        try test.assert(merged["bool"]?.bool == false)
+        try test.assert(merged["integer"]?.integer == 1234)
     }
 
     static func testOverlays() throws {
