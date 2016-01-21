@@ -18,6 +18,9 @@ import Foundation
  * A package is the structural represtation of an `atpkg` file.
  */
 final public class Package {
+    /** The file extension for all packages. */
+    public static let PackageExtension = "atpkg"
+    
     /** The keys used to store the values in the package file. */
     public enum Keys {
         public static let Name = "name"
@@ -25,6 +28,8 @@ final public class Package {
         public static let PackageTypeName = "package"
         public static let ImportPackages = "import-packages"
         public static let Tasks = "tasks"
+        public static let Overlays = "overlays"
+        public static let UseOverlays = "use-overlays"
     }
     
     /** The path to the package file. */
@@ -50,6 +55,11 @@ final public class Package {
     public var tasks: ConfigMap? {
         return config[Keys.Tasks]?.dictionary
     }
+
+    /** The overlays for the package. */
+    public var overlays: ConfigMap? {
+        return config[Keys.Overlays]?.dictionary
+    }
     
     /**
      * Initializes a new instance of `Package` from a given `DeclarationType`.
@@ -74,7 +84,7 @@ final public class Package {
                     throw PackageError(.InvalidDataType($0, Value.StringType))
                 }
                 
-                return try Package(path: rootPath.toNSString.stringByAppendingPathComponent(path))
+                return try Package(path: rootPath.toNSString.stringByAppendingPathComponent(path) + ".\(Package.PackageExtension)")
             }
         }
         else {

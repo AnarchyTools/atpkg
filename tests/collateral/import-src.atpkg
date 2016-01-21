@@ -2,7 +2,7 @@
 (package
   :name "import_src"
   :version "0.1.0-dev"
-  :import-packages ["import_dst.atpkg"]
+  :import-packages ["import-dst"]
   
   :tasks {
     :build {

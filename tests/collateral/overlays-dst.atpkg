@@ -3,8 +3,8 @@
   :version "0.1.0-dev"
 
   :overlays {
-    :exported-overlay {
-      :compile-options ["-D" "MOST_AWESOME"]
+    :macosx {
+      :compile-options ["--macosx-overlays-dst"]
     }
   }
 )

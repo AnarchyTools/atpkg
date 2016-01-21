@@ -3,11 +3,11 @@
 (package
   :name "overlays_src"
   :version "0.1.0-dev"
-  :import ["overlays_dst.atpkg"]
+  :import-packages ["overlays-dst"]
 
   :overlays {
-    :sample-overlay {
-      :compile-options ["-D" "MORE_AWESOME"]
+    :macosx {
+      :compile-options ["--macosx-overlays-src"]
     }
   }
 
@@ -17,8 +17,13 @@
       :name "json-swift"
       :output-type "lib" 
       :source ["src/**.swift" "lib/**.swift"]
-      :compile-options ["-D" "AWESOME"]
-      :use-overlays ["sample-overlay" "overlays_dst.exported-overlay"]
+      :compile-options ["--task-compile-options"]
+      :use-overlays ["macosx"]
+      :overlays {
+        :macosx {
+          :compile-options ["--macosx-task"]
+        }
+      }
     }
   }
 )

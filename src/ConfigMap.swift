@@ -87,84 +87,42 @@ public func mergeConfigs(configs: [ConfigMap]) throws -> ConfigMap {
 }
 
 /**
- * Represents the top-level declaration defined within the package file.
+ * Produces a `ConfigMap` based on the package data, the task to run, and the CLI
+ * environment that's been given.
  */
-final public class DeclarationType {
-    /** The name of the defined type. */
-    public var name: String = ""
+public func overlayedConfigMap(package: Package, task: String, cli: ConfigMap? = nil) throws -> ConfigMap {
+    guard let packageTask = package.tasks?[task] else {
+        throw PackageError(.InvalidTask(task))
+    }
+    guard let task = packageTask.dictionary else {
+        throw PackageError(.InvalidDataType(packageTask, Value.DictionaryType))
+    }
     
-    /** The properties associated with the declaration. */
-    public var properties: ConfigMap = [:]
+    let overlays = [
+        cli?[Package.Keys.UseOverlays]?.array,
+        task[Package.Keys.UseOverlays]?.array
+    ]
+        .flatMap { $0 }
+        .flatMap{ $0 }
+        .map { $0.string }
+        .filter { $0 != nil }
+        .flatMap { $0 }
+
+    let packageOverlays = try packageConfigs(package, overlays: overlays)
+    
+    let taskOverlays = try mergeConfigs(overlays.map {
+        task[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
+    }.flatMap { $0 })
+    
+    return try mergeConfigs([packageOverlays, taskOverlays, task, cli].flatMap { $0 })
 }
 
-/**
- * Defines all of the available data types that can be stored within a
- * `DeclarationType`.
- */
-public enum Value {
-    case StringLiteral(String)
-    case IntegerLiteral(Int)
-    case FloatLiteral(Double)
-    case BoolLiteral(Bool)
+private func packageConfigs(package: Package, overlays: [String]) throws -> ConfigMap {
+    var merged = try mergeConfigs(overlays.map { package.overlays?[$0]?.dictionary }.flatMap { $0 })
     
-    case DictionaryLiteral(ConfigMap)
-    case ArrayLiteral([Value])
-}   
-
-/**
- * A set of extensions to provide proper names for each of the enums.
- */
-extension Value {
-    public static let StringType = "Value.StringLiteral"
-    public static let IntegerType = "Value.IntegerLiteral"
-    public static let FloatType = "Value.FloatLiteral"
-    public static let BoolType = "Value.BoolLiteral"
-    public static let DictionaryType = "Value.DictionaryLiteral"
-    public static let ArrayType = "Value.ArrayLiteral"
-
-    public var typeName: String {
-        switch self {
-        case .StringLiteral: return Value.StringType
-        case .IntegerLiteral: return Value.IntegerType
-        case .FloatLiteral: return Value.FloatType
-        case .BoolLiteral: return Value.BoolType
-        case .DictionaryLiteral: return Value.DictionaryType
-        case .ArrayLiteral: return Value.ArrayType
-        }
-    }
-}
-
-/**
- * A set of extensions to make working with associated enums easier.
- */
-extension Value {
-    public var string: String? {
-        if case let .StringLiteral(value) = self { return value }
-        return nil
+    for package in package.importedPackages {
+        merged = try mergeConfigs([packageConfigs(package, overlays: overlays), merged])
     }
     
-    public var integer: Int? {
-        if case let .IntegerLiteral(value) = self { return value }
-        return nil
-    }
-
-    public var float: Double? {
-        if case let .FloatLiteral(value) = self { return value }
-        return nil
-    }
-
-    public var bool: Bool? {
-        if case let .BoolLiteral(value) = self { return value }
-        return nil
-    }
-    
-    public var dictionary: [String:Value]? {
-        if case let .DictionaryLiteral(value) = self { return value }
-        return nil
-    }
-    
-    public var array: [Value]? {
-        if case let .ArrayLiteral(value) = self { return value }
-        return nil
-    }
+    return merged
 }

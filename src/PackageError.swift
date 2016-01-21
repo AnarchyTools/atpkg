@@ -34,6 +34,7 @@ public struct PackageError: ErrorType {
         case InvalidDataType(Value, String)
         case InvalidDeclarationType(String)
         case InvalidPackageFilePath(String)
+        case InvalidTask(String)
     }
     
     /** The specific type of error. */
