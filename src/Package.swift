@@ -34,6 +34,9 @@ final public class Package {
     
     /** The path to the package file. */
     public let path: String
+
+    /** The file name of the package file. */
+    public let fileName: String
     
     /** The imported packages. */
     public let importedPackages: [Package]
@@ -70,7 +73,8 @@ final public class Package {
         if decl.name != Keys.PackageTypeName {
             throw PackageError(.InvalidDeclarationType(decl.name))
         }
-        self.path = path
+        self.path = path.toNSString.stringByDeletingLastPathComponent
+        self.fileName = self.path.toNSString.lastPathComponent
         self.config = decl.properties
         
         if let packages = config[Keys.ImportPackages] {
@@ -78,13 +82,13 @@ final public class Package {
                 throw PackageError(.InvalidDataType(packages, Value.ArrayType))
             }
             
-            let rootPath = self.path.toNSString.stringByDeletingLastPathComponent
+            let basePath = self.path
             self.importedPackages = try array.map {
                 guard let path = $0.string else {
                     throw PackageError(.InvalidDataType($0, Value.StringType))
                 }
                 
-                return try Package(path: rootPath.toNSString.stringByAppendingPathComponent(path) + ".\(Package.PackageExtension)")
+                return try Package(path: basePath.toNSString.stringByAppendingPathComponent(path) + ".\(Package.PackageExtension)")
             }
         }
         else {
