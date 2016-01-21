@@ -19,7 +19,7 @@ import Foundation
  *   - parameter sourceDescriptions: a descriptions of sources such as ["src/**.swift"] */
  *   - returns: A list of resolved sources such as ["src/a.swift", "src/b.swift"]
  */
-public func collectSources(sourceDescriptions: [String], task: Task) -> [String] {
+// public func collectSources(sourceDescriptions: [String], task: Task) -> [String] {
     // var sources : [String] = []
     // for unPrefixedDescription in sourceDescriptions {
     //     let description = task.importedPath + unPrefixedDescription
@@ -41,5 +41,5 @@ public func collectSources(sourceDescriptions: [String], task: Task) -> [String]
     //     }
     // }
     // return sources
-    return []
-}
+//     return []
+// }

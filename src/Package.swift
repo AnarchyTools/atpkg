@@ -68,13 +68,13 @@ final public class Package {
                 throw PackageError(.InvalidDataType(packages, Value.ArrayType))
             }
             
-            let rootPath = self.path.toNSString().stringByDeletingLastPathComponent
+            let rootPath = self.path.toNSString.stringByDeletingLastPathComponent
             self.importedPackages = try array.map {
                 guard let path = $0.string else {
                     throw PackageError(.InvalidDataType($0, Value.StringType))
                 }
                 
-                return try Package(path: rootPath.toNSString().stringByAppendingPathComponent(path))
+                return try Package(path: rootPath.toNSString.stringByAppendingPathComponent(path))
             }
         }
         else {
