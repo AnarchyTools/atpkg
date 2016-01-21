@@ -29,13 +29,7 @@ class PackageTests: Test {
     
     static func testBasic() throws {
         let path = "./tests/collateral/basic.atpkg"
-
-        guard let parser = Parser(path: path) else {
-            try test.assert(false); return
-        }
-        
-        let decl = try parser.parse()
-        let package = try Package(declarationType: decl)
+        let package = try Package(path: path)
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
@@ -51,11 +45,14 @@ class PackageTests: Test {
     }
 
     static func testImport() throws {
-        // let filepath = "./tests/collateral/import_src.atpkg"
-        // guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
-
-        // try test.assert(package.tasks["import_dst.build"] != nil)
-        // try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
+        let path = "./tests/collateral/import_src.atpkg"
+        let package = try Package(path: path)
+        
+        try test.assert(package.name == "import_src")
+        try test.assert(package.importedPackages.count == 1)
+        try test.assert(package.importedPackages[0].name == "import_dst")
+        try test.assert(package.importedPackages[0].importedPackages.count == 1)
+        try test.assert(package.importedPackages[0].importedPackages[0].name == "basic")
     }
 
     static func testOverlays() throws {

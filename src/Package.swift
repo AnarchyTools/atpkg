@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
+
 /**
  * A task represents an action that can be performed by the `atbuild` system.
  */
@@ -153,6 +155,9 @@ final public class Package {
         public static let Tasks = "tasks"
     }
     
+    /** The path to the package file. */
+    public let path: String
+    
     /** The imported packages. */
     public let importedPackages: [Package]
     
@@ -179,10 +184,11 @@ final public class Package {
      * If `DeclarationType` does not specify a `package` declaration, the `nil`
      * will be returned.
      */
-    public init(declarationType decl: DeclarationType) throws {
+    private init(declarationType decl: DeclarationType, path: String) throws {
         if decl.name != Keys.PackageTypeName {
             throw PackageError(.InvalidDeclarationType(decl.name))
         }
+        self.path = path
         self.config = decl.properties
         
         if let packages = config[Keys.ImportPackages] {
@@ -190,12 +196,13 @@ final public class Package {
                 throw PackageError(.InvalidDataType(packages, Value.ArrayType))
             }
             
+            let rootPath = (self.path as NSString).stringByDeletingLastPathComponent
             self.importedPackages = try array.map {
                 guard let path = $0.string else {
                     throw PackageError(.InvalidDataType($0, Value.StringType))
                 }
                 
-                return try Package(path: path)
+                return try Package(path: (rootPath as NSString).stringByAppendingPathComponent(path))
             }
         }
         else {
@@ -213,7 +220,7 @@ final public class Package {
         }
         
         let decl = try parser.parse()
-        try self.init(declarationType: decl)
+        try self.init(declarationType: decl, path: path)
     }
 }
     

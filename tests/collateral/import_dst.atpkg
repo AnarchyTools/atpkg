@@ -1,6 +1,7 @@
 (package
   :name "import_dst"
   :version "0.1.0-dev"
+  :import-packages ["basic.atpkg"]
   
   :tasks {
     :build {
