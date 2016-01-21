@@ -53,7 +53,7 @@ final public class Task {
             for (name, overlay) in overlays {
 
                 guard let innerOverlay = overlay.map else {
-                    fatalError("non-map oberlay \(overlay)")
+                    fatalError("non-map overlay \(overlay)")
                 }
                 self.declaredOverlays[name] = innerOverlay
             }
@@ -255,7 +255,8 @@ final public class Package {
                     if task.appliedOverlays.contains(overlayName) { continue }
 
                     guard let overlay = declaredOverlays[overlayName] else {
-                        fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
+                        print("Warning: Can't apply overlay \(overlayName) to task \(task.key)")
+                        continue
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
                     usedGlobalOverlays.append(overlayName)
@@ -263,21 +264,20 @@ final public class Package {
             }
             if !again { break }
         }
-        
-
 
         //warn about unused global overlays
         for requestedOverlay in requestedGlobalOverlays {
             if !usedGlobalOverlays.contains(requestedOverlay) {
-                print("Warning: overlay \(requestedOverlay) had no effect.")
+                print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
             }
         }
 
         //load remote tasks
         for remotePackage in remotePackages {
-            for task in remotePackage.tasks.keys {
-                remotePackage.tasks[task]!.importedPath = remotePackage.adjustedImportPath
-                self.tasks["\(remotePackage.name).\(task)"] = remotePackage.tasks[task]
+            for (_, task) in remotePackage.tasks {
+                task.importedPath = remotePackage.adjustedImportPath
+                task.key = "\(remotePackage.name).\(task.key)"
+                self.tasks[task.key] = task
             }
         }
 
