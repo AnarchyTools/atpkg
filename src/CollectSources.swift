@@ -11,32 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import Foundation
+
 /**
  * This function resolves wildcards in source descriptions to complete values
  *   - parameter sourceDescriptions: a descriptions of sources such as ["src/**.swift"] */
  *   - returns: A list of resolved sources such as ["src/a.swift", "src/b.swift"]
  */
 public func collectSources(sourceDescriptions: [String], task: Task) -> [String] {
-    var sources : [String] = []
-    for unPrefixedDescription in sourceDescriptions {
-        let description = task.importedPath + unPrefixedDescription
-        if description.hasSuffix("**.swift") {
-            let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
+    // var sources : [String] = []
+    // for unPrefixedDescription in sourceDescriptions {
+    //     let description = task.importedPath + unPrefixedDescription
+    //     if description.hasSuffix("**.swift") {
+    //         let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
 
-            guard let enumerator = ICantBelieveItsNotFoundation_enumeratorAtPath(basepath) else {
-                fatalError("Invalid path \(basepath)")
-            }
-            while let source_ns = enumerator.nextObject() as? NSString {
-                let source = source_ns.toString
-                if source.hasSuffix("swift") {
-                    sources.append(basepath + "/" + source)
-                }
-            }
-        }
-        else {
-            sources.append(description)
-        }
-    }
-    return sources
+    //         guard let enumerator = ICantBelieveItsNotFoundation_enumeratorAtPath(basepath) else {
+    //             fatalError("Invalid path \(basepath)")
+    //         }
+    //         while let source_ns = enumerator.nextObject() as? NSString {
+    //             let source = source_ns.toString
+    //             if source.hasSuffix("swift") {
+    //                 sources.append(basepath + "/" + source)
+    //             }
+    //         }
+    //     }
+    //     else {
+    //         sources.append(description)
+    //     }
+    // }
+    // return sources
+    return []
 }

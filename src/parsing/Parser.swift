@@ -20,54 +20,6 @@ public enum ParseError: ErrorType {
     case InvalidTokenForValueType(Token?)
 }
 
-public enum ParseValue {
-    case StringLiteral(String)
-    case IntegerLiteral(Int)
-    case FloatLiteral(Double)
-    case BoolLiteral(Bool)
-    
-    case Map([String:ParseValue])
-    case Vector([ParseValue])
-}
-
-extension ParseValue {
-    public var string: String? {
-        if case let .StringLiteral(value) = self { return value }
-        return nil
-    }
-    
-    public var integer: Int? {
-        if case let .IntegerLiteral(value) = self { return value }
-        return nil
-    }
-
-    public var float: Double? {
-        if case let .FloatLiteral(value) = self { return value }
-        return nil
-    }
-
-    public var bool: Bool? {
-        if case let .BoolLiteral(value) = self { return value }
-        return nil
-    }
-    
-    public var map: [String:ParseValue]? {
-        if case let .Map(value) = self { return value }
-        return nil
-    }
-    
-    public var vector: [ParseValue]? {
-        if case let .Vector(value) = self { return value }
-        return nil
-    }
-}
-
-
-final public class ParseType {
-    public var name: String = ""
-    public var properties: [String:ParseValue] = [:]
-}
-
 final public class Parser {
     let lexer: Lexer
     
@@ -89,27 +41,27 @@ final public class Parser {
         self.lexer = Lexer(scanner: scanner)
     }
     
-    public func parse() throws -> ParseType {
+    public func parse() throws -> DeclarationType {
         guard let token = next() else { throw ParseError.InvalidPackageFile }
         
         if token.type == .OpenParen {
-            return try parseType()
+            return try parseDeclaration()
         }
         else {
             throw ParseError.ExpectedTokenType(.OpenParen, token)
         }
     }
     
-    private func parseType() throws -> ParseType {
-        let type = ParseType()
-        type.name = try parseIdentifier()
+    private func parseDeclaration() throws -> DeclarationType {
+        let decl = DeclarationType()
+        decl.name = try parseIdentifier()
         
-        type.properties = try parseKeyValuePairs()
-        return type
+        decl.properties = try parseKeyValuePairs()
+        return decl
     }
     
-    private func parseKeyValuePairs() throws -> [String:ParseValue] {
-        var pairs: [String:ParseValue] = [:]
+    private func parseKeyValuePairs() throws -> [String:Value] {
+        var pairs: [String:Value] = [:]
 
         while let token = next() where token.type != .CloseParen && token.type != .CloseBrace {
             lexer.stall()
@@ -138,7 +90,7 @@ final public class Parser {
         return identifier.value
     }
     
-    private func parseValue() throws -> ParseValue {
+    private func parseValue() throws -> Value {
         guard let token = next() else { throw ParseError.InvalidTokenForValueType(nil) }
         
         switch token.type {
@@ -151,9 +103,9 @@ final public class Parser {
         }
     }
     
-    private func parseVector() throws -> ParseValue {
+    private func parseVector() throws -> Value {
         if let token = next() where token.type != .OpenBracket { throw ParseError.ExpectedTokenType(.OpenBracket, token) }
-        var items: [ParseValue] = []
+        var items: [Value] = []
         
         while let token = next() where token.type != .CloseBracket {
             lexer.stall()
@@ -166,7 +118,7 @@ final public class Parser {
         return .Vector(items)
     }
     
-    private func parseMap() throws -> ParseValue {
+    private func parseMap() throws -> Value {
         if let token = next() where token.type != .OpenBrace { throw ParseError.ExpectedTokenType(.OpenBrace, token) }
         let items = try parseKeyValuePairs()
         if let token = next() where token.type != .CloseBrace { throw ParseError.ExpectedTokenType(.CloseBrace, token) }
