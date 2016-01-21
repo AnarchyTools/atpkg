@@ -32,8 +32,8 @@ final public class Parser {
         }
     }
     
-    public init?(filepath: String) {
-        guard let content = try? NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding) else {
+    public init?(path: String) {
+        guard let content = try? NSString(contentsOfFile: path, encoding: NSUTF8StringEncoding) else {
             return nil
         }
         
@@ -60,8 +60,8 @@ final public class Parser {
         return decl
     }
     
-    private func parseKeyValuePairs() throws -> [String:Value] {
-        var pairs: [String:Value] = [:]
+    private func parseKeyValuePairs() throws -> ConfigMap {
+        var pairs: ConfigMap = [:]
 
         while let token = next() where token.type != .CloseParen && token.type != .CloseBrace {
             lexer.stall()
@@ -115,7 +115,7 @@ final public class Parser {
 
         if let token = next() where token.type != .CloseBracket { throw ParseError.ExpectedTokenType(.CloseBracket, token) }
 
-        return .Vector(items)
+        return .ArrayLiteral(items)
     }
     
     private func parseMap() throws -> Value {
@@ -123,6 +123,6 @@ final public class Parser {
         let items = try parseKeyValuePairs()
         if let token = next() where token.type != .CloseBrace { throw ParseError.ExpectedTokenType(.CloseBrace, token) }
         
-        return .Map(items)
+        return .DictionaryLiteral(items)
     }
 }

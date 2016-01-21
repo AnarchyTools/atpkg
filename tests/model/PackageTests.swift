@@ -28,28 +28,26 @@ class PackageTests: Test {
     let filename = __FILE__
     
     static func testBasic() throws {
-        // let filepath = "./tests/collateral/basic.atpkg"
+        let path = "./tests/collateral/basic.atpkg"
 
-        // guard let parser = Parser(filepath: filepath) else {
-        //     try test.assert(false); return
-        // }
+        guard let parser = Parser(path: path) else {
+            try test.assert(false); return
+        }
         
-        // let result = try parser.parse()
-        // guard let package = Package(type: result, overlay: [], pathOnDisk: "./tests/collateral") else { try test.assert(false); return }
+        let decl = try parser.parse()
+        let package = try Package(declarationType: decl)
         
-        // try test.assert(package.name == "basic")
-        // try test.assert(package.version == "0.1.0-dev")
+        try test.assert(package.name == "basic")
+        try test.assert(package.version == "0.1.0-dev")
         
-        // try test.assert(package.tasks.count == 1)
-        // for (key, task) in package.tasks {
-        //     try test.assert(key == "build")
-        //     try test.assert(task.tool == "lldb-build")
-        //     try test.assert(task["name"]?.string == "json-swift")
-        //     try test.assert(task["output-type"]?.string == "lib")
-        //     try test.assert(task["source"]?.vector?.count == 2)
-        //     try test.assert(task["source"]?.vector?[0].string == "src/**.swift")
-        //     try test.assert(task["source"]?.vector?[1].string == "lib/**.swift")
-        // }
+        try test.assert(package.tasks?.count == 1)
+        guard let task = package.tasks?["build"]?.dictionary else { try test.assert(false); return }
+        try test.assert(task["tool"]?.string == "lldb-build")
+        try test.assert(task["name"]?.string == "json-swift")
+        try test.assert(task["output-type"]?.string == "lib")
+        try test.assert(task["source"]?.array?.count == 2)
+        try test.assert(task["source"]?.array?[0].string == "src/**.swift")
+        try test.assert(task["source"]?.array?[1].string == "lib/**.swift")
     }
 
     static func testImport() throws {

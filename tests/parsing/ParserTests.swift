@@ -25,8 +25,8 @@ class ParserTests: Test {
     let filename = __FILE__
     
     static func testBasic() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
-        guard let parser = Parser(filepath: filepath) else {
+        let path = "./tests/collateral/basic.atpkg"
+        guard let parser = Parser(path: path) else {
             try test.assert(false); return
         }
         
@@ -43,25 +43,25 @@ class ParserTests: Test {
         let tasks = result.properties["tasks"]
         try test.assert(tasks != nil)
 
-        let build = tasks?.map?["build"]
+        let build = tasks?.dictionary?["build"]
         try test.assert(build != nil)
 
-        let tool = build?.map?["tool"]
+        let tool = build?.dictionary?["tool"]
         try test.assert(tool != nil)
         try test.assert(tool?.string == "lldb-build")
 
-        let buildName = build?.map?["name"]
+        let buildName = build?.dictionary?["name"]
         try test.assert(buildName != nil)
         try test.assert(buildName?.string == "json-swift")
 
-        let outputType = build?.map?["output-type"]
+        let outputType = build?.dictionary?["output-type"]
         try test.assert(outputType != nil)
         try test.assert(outputType?.string == "lib")
 
-        let source = build?.map?["source"]
+        let source = build?.dictionary?["source"]
         try test.assert(source != nil)
-        try test.assert(source?.vector != nil)
-        try test.assert(source?.vector?[0].string == "src/**.swift")
-        try test.assert(source?.vector?[1].string == "lib/**.swift")
+        try test.assert(source?.array != nil)
+        try test.assert(source?.array?[0].string == "src/**.swift")
+        try test.assert(source?.array?[1].string == "lib/**.swift")
     }
 }

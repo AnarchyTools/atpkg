@@ -39,9 +39,32 @@ public enum Value {
     case FloatLiteral(Double)
     case BoolLiteral(Bool)
     
-    case Map([String:Value])
-    case Vector([Value])
+    case DictionaryLiteral(ConfigMap)
+    case ArrayLiteral([Value])
 }   
+
+/**
+ * A set of extensions to provide proper names for each of the enums.
+ */
+extension Value {
+    public static let StringType = "Value.StringLiteral"
+    public static let IntegerType = "Value.IntegerLiteral"
+    public static let FloatType = "Value.FloatLiteral"
+    public static let BoolType = "Value.BoolLiteral"
+    public static let DictionaryType = "Value.DictionaryLiteral"
+    public static let ArrayType = "Value.ArrayLiteral"
+
+    public var typeName: String {
+        switch self {
+        case .StringLiteral: return Value.StringType
+        case .IntegerLiteral: return Value.IntegerType
+        case .FloatLiteral: return Value.FloatType
+        case .BoolLiteral: return Value.BoolType
+        case .DictionaryLiteral: return Value.DictionaryType
+        case .ArrayLiteral: return Value.ArrayType
+        }
+    }
+}
 
 /**
  * A set of extensions to make working with associated enums easier.
@@ -67,13 +90,13 @@ extension Value {
         return nil
     }
     
-    public var map: [String:Value]? {
-        if case let .Map(value) = self { return value }
+    public var dictionary: [String:Value]? {
+        if case let .DictionaryLiteral(value) = self { return value }
         return nil
     }
     
-    public var vector: [Value]? {
-        if case let .Vector(value) = self { return value }
+    public var array: [Value]? {
+        if case let .ArrayLiteral(value) = self { return value }
         return nil
     }
 }

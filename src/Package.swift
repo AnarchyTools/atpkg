@@ -144,28 +144,34 @@ final public class Task {
  * A package is the structural represtation of an `atpkg` file.
  */
 final public class Package {
-    /** The name of the package. */
-    public var name: String
+    /** The keys used to store the values in the package file. */
+    public enum Keys {
+        public static let Name = "name"
+        public static let Version = "version"
+        public static let PackageTypeName = "package"
+        public static let ImportPackages = "import-packages"
+        public static let Tasks = "tasks"
+    }
     
-    /** This is the map of all of the settings stored for the task. */
-    public var config: ConfigMap = [:]
+    /** The imported packages. */
+    public let importedPackages: [Package]
+    
+    /** This is the map of all of the settings stored for the package. */
+    public let config: ConfigMap
 
+    /** The name of the package. */
+    public var name: String? {
+        return config[Keys.Name]?.string
+    }
     
     /** The version number for the package. */
     public var version: String? {
-        return config["version"]?.string
+        return config[Keys.Version]?.string
     }
     
     /** The tasks for the package. */
-    public var tasks: [String:Task]? {
-        // if let parsedTasks = map["tasks"]?.map {
-        //     for (key, value) in parsedTasks {
-        //         if let task = Task(value: value, name: key) {
-        //             self.tasks[key] = task
-        //         }
-        //     }
-        // }
-        return nil
+    public var tasks: ConfigMap? {
+        return config[Keys.Tasks]?.dictionary
     }
     
     /**
@@ -173,10 +179,41 @@ final public class Package {
      * If `DeclarationType` does not specify a `package` declaration, the `nil`
      * will be returned.
      */
-    public init?(decl: DeclarationType) {
-        if decl.name != "package" { return nil }
-        self.name = decl.name
+    public init(declarationType decl: DeclarationType) throws {
+        if decl.name != Keys.PackageTypeName {
+            throw PackageError(.InvalidDeclarationType(decl.name))
+        }
         self.config = decl.properties
+        
+        if let packages = config[Keys.ImportPackages] {
+            guard let array = packages.array else {
+                throw PackageError(.InvalidDataType(packages, Value.ArrayType))
+            }
+            
+            self.importedPackages = try array.map {
+                guard let path = $0.string else {
+                    throw PackageError(.InvalidDataType($0, Value.StringType))
+                }
+                
+                return try Package(path: path)
+            }
+        }
+        else {
+            self.importedPackages = []
+        }
+    }
+    
+    /**
+     * Initializes a new instance of `Package` from the contents of the file
+     * at the given `path`.
+     */
+    public convenience init(path: String) throws {
+        guard let parser = Parser(path: path) else {
+            throw PackageError(.InvalidPackageFilePath(path))
+        }
+        
+        let decl = try parser.parse()
+        try self.init(declarationType: decl)
     }
 }
     

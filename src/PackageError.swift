@@ -31,7 +31,9 @@ public struct PackageError: ErrorType {
      */
     
     public enum ErrorType {
-        case InvalidEntry
+        case InvalidDataType(Value, String)
+        case InvalidDeclarationType(String)
+        case InvalidPackageFilePath(String)
     }
     
     /** The specific type of error. */
@@ -50,7 +52,7 @@ public struct PackageError: ErrorType {
     let functionName: String
     
     public init(
-        type: PackageError.ErrorType,
+        _ type: PackageError.ErrorType,
         line: Int = __LINE__,
         column: Int = __COLUMN__,
         fileName: String = __FILE__,
