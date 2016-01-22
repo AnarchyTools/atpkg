@@ -1,0 +1,13 @@
+(package
+  :name "import_folder"
+  :version "0.1.0-dev"
+  :imports ["folder/folder.atpkg"]
+  
+  :tasks {
+    :build {
+      :tool "shell"
+      :script "echo hello world"
+      :depends ["folder.build"]
+    }
+  }
+)

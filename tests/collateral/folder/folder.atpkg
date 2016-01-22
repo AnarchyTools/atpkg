@@ -1,0 +1,11 @@
+(package
+  :name "folder"
+  :version "0.1.0-dev"
+  
+  :tasks {
+    :build {
+      :tool "shell"
+      :script "echo hello world"
+    }
+  }
+)

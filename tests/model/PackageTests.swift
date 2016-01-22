@@ -23,7 +23,8 @@ class PackageTests: Test {
         PackageTests.testImport,
         // PackageTests.testMergeConfigs,
         // PackageTests.testInvalidMergeConfigs,
-        PackageTests.testOverlays
+        PackageTests.testOverlays,
+        PackageTests.testFolder
     ]
 
     let filename = __FILE__
@@ -72,5 +73,13 @@ class PackageTests: Test {
         try test.assert(config["compile-options"]?.array?[2].string == "--macosx-overlays-dst")
         try test.assert(config["compile-options"]?.array?[3].string == "--macosx-overlays-src")
         try test.assert(config["something"]?.string == "new")
+    }
+
+    static func testFolder() throws {
+        let path = "./tests/collateral/import-folder.atpkg"
+        let package = try Package(path: path)
+        guard let build = package.tasks["build"] else { try test.assert(false); return }
+        guard let build2 = package.tasks["folder.build"] else { try test.assert(false); return }
+
     }
 }
