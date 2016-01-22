@@ -54,6 +54,9 @@ class PackageTests: Test {
         try test.assert(package.importedPackages[0].name == "import_dst")
         try test.assert(package.importedPackages[0].importedPackages.count == 1)
         try test.assert(package.importedPackages[0].importedPackages[0].name == "basic")
+        
+        try test.assert(package.tasks["import_dst/build"]?["name"]?.string == "json-swift")
+        try test.assert(package.tasks["basic/build"]?["name"]?.string == "json-swift")
     }
 
     static func testOverlays() throws {

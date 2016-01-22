@@ -61,10 +61,23 @@ final public class Package {
             for (key, value) in config[Keys.Tasks]?.dictionary ?? [:] {
                 _tasks?[key] = Task(package: self, key: key, config: value.dictionary!)
             }
+            
+            findImportedTasks(self.importedPackages)
         }
         return _tasks!
     }
     private var _tasks: [String:Task]? = nil
+    
+    private func findImportedTasks(packages: [Package]) {
+        if _tasks == nil { _tasks = [:] }
+        for package in packages {
+            for (key, task) in package.tasks {
+                _tasks?["\(package.name!)/\(key)"] = task
+            }
+            findImportedTasks(package.importedPackages)
+        }
+    }
+
 
     /** The overlays for the package. */
     public var overlays: ConfigMap? {
@@ -81,7 +94,7 @@ final public class Package {
             throw PackageError(.InvalidDeclarationType(decl.name))
         }
         self.path = path.toNSString.stringByDeletingLastPathComponent
-        self.fileName = self.path.toNSString.lastPathComponent
+        self.fileName = path.toNSString.lastPathComponent
         self.config = decl.properties
         
         if let packages = config[Keys.ImportPackages] {
