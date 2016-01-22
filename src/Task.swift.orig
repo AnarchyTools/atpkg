@@ -47,6 +47,26 @@ public final class Task {
      * all of the configuration information from the package.
      */ 
     public func mergedConfig(overrides: ConfigMap? = nil) throws -> ConfigMap {
+<<<<<<< HEAD
+        if _mergedConfig == nil {
+            let overlays = [
+                overrides?[Package.Keys.UseOverlays]?.array,
+                self.config[Package.Keys.UseOverlays]?.array
+            ]
+                .flatMap { $0 }
+                .flatMap { $0 }
+                .map { $0.string }
+                .flatMap { $0 }
+            let packageOverlays = try packageConfigs(package, overlays: overlays)
+            
+            let taskOverlays = try mergeConfigs(overlays.map {
+                self.config[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
+            }.flatMap { $0 })
+            
+            _mergedConfig = try mergeConfigs([self.config, taskOverlays, packageOverlays, overrides].flatMap { $0 })
+        }
+        return _mergedConfig!
+=======
         let overlays = [
             overrides?[Package.Keys.UseOverlays]?.array,
             self.config[Package.Keys.UseOverlays]?.array
@@ -63,6 +83,7 @@ public final class Task {
         }.flatMap { $0 })
         
         return try mergeConfigs([self.config, taskOverlays, packageOverlays, overrides].flatMap { $0 })
+>>>>>>> cfeeb1cc9752992fd9eb47a0ad24a5eab92acf3b
     }
     
     /**

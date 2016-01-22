@@ -43,6 +43,9 @@ final public class Package {
     
     /** This is the map of all of the settings stored for the package. */
     public let config: ConfigMap
+    
+    /** The entry point to allow for overrides to be set. */
+    public let overrides: ConfigMap?
 
     /** The name of the package. */
     public var name: String? {
@@ -59,7 +62,7 @@ final public class Package {
         if _tasks == nil {
             _tasks = [:]
             for (key, value) in config[Keys.Tasks]?.dictionary ?? [:] {
-                _tasks?[key] = Task(package: self, key: key, config: value.dictionary!)
+                _tasks?[key] = Task(package: self, key: key, config: value.dictionary!, overrides: overrides)
             }
             
             findImportedTasks(self.importedPackages)
@@ -89,13 +92,14 @@ final public class Package {
      * If `DeclarationType` does not specify a `package` declaration, the `nil`
      * will be returned.
      */
-    private init(declarationType decl: DeclarationType, path: String) throws {
+    private init(declarationType decl: DeclarationType, path: String, overrides: ConfigMap? = nil) throws {
         if decl.name != Keys.PackageTypeName {
             throw PackageError(.InvalidDeclarationType(decl.name))
         }
         self.path = path.toNSString.stringByDeletingLastPathComponent
         self.fileName = path.toNSString.lastPathComponent
         self.config = decl.properties
+        self.overrides = overrides
         
         if let packages = config[Keys.ImportPackages] {
             guard let array = packages.array else {
@@ -108,7 +112,7 @@ final public class Package {
                     throw PackageError(.InvalidDataType($0, Value.StringType))
                 }
                 
-                return try Package(path: basePath.toNSString.stringByAppendingPathComponent(path) + ".\(Package.PackageExtension)")
+                return try Package(path: basePath.toNSString.stringByAppendingPathComponent(path) + ".\(Package.PackageExtension)", overrides: overrides)
             }
         }
         else {
@@ -120,13 +124,13 @@ final public class Package {
      * Initializes a new instance of `Package` from the contents of the file
      * at the given `path`.
      */
-    public convenience init(path: String) throws {
+    public convenience init(path: String, overrides: ConfigMap? = nil) throws {
         guard let parser = Parser(path: path) else {
             throw PackageError(.InvalidPackageFilePath(path))
         }
         
         let decl = try parser.parse()
-        try self.init(declarationType: decl, path: path)
+        try self.init(declarationType: decl, path: path, overrides: overrides)
     }
 }
 
