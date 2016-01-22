@@ -116,3 +116,28 @@ final public class Package {
         try self.init(declarationType: decl, path: path)
     }
 }
+
+extension Package {
+    /**
+     * Calculate the pruned dependency graph for the given task
+     *
+     * - returns: A list of tasks in a reasonable order to be processed.
+     */
+    public func prunedDependencyGraph(task: Task) -> [Task] {
+        var pruned : [Task] = []
+        if let dependencies = task["dependencies"]?.array {
+            for next in dependencies {
+                guard let depName = next.string else { fatalError("Non-string dependency \(next)")}
+                guard let nextTask = tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
+                let nextGraph = prunedDependencyGraph(nextTask)
+                for nextItem in nextGraph {
+                    let filteredTasks = pruned.filter() {$0.key == nextItem.key}
+                    if filteredTasks.count >= 1 { continue }
+                    pruned.append(nextItem)
+                }
+            }
+        }
+        pruned.append(task)
+        return pruned
+    }
+}
