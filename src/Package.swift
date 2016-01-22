@@ -55,9 +55,16 @@ final public class Package {
     }
     
     /** The tasks for the package. */
-    public var tasks: ConfigMap? {
-        return config[Keys.Tasks]?.dictionary
+    public var tasks: [String:Task] {
+        if _tasks == nil {
+            _tasks = [:]
+            for (key, value) in config[Keys.Tasks]?.dictionary ?? [:] {
+                _tasks?[key] = Task(package: self, key: key, config: value.dictionary!)
+            }
+        }
+        return _tasks!
     }
+    private var _tasks: [String:Task]? = nil
 
     /** The overlays for the package. */
     public var overlays: ConfigMap? {
