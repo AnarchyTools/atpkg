@@ -1,13 +1,11 @@
 (package
-  :name "folder"
+  :name "folder2"
   :version "0.1.0-dev"
-  :import-packages ["folder2/folder2"]
   
   :tasks {
     :build {
       :tool "shell"
       :script "echo hello world"
-      :dependecies ["folder2/folder2"]
     }
   }
 )

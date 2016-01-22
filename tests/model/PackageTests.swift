@@ -80,5 +80,7 @@ class PackageTests: Test {
         let package = try Package(path: path)
         if package.tasks["build"] == nil { try test.assert(false); return }
         if package.tasks["folder/build"] == nil { try test.assert(false); return }
+        if package.tasks["folder/folder2/build"] == nil { try test.assert(false); return }
+
     }
 }
