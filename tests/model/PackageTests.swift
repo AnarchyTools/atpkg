@@ -14,7 +14,7 @@
 
 
 import Foundation
-import atpkg
+import AnarchyPackage
 
 class PackageTests: Test {
     required init() {}

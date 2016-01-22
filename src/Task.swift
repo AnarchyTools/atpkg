@@ -22,39 +22,48 @@ public final class Task {
     /** This is the map of all of the settings stored for the task. */
     public let config: ConfigMap
     
+    /** The entry point to allow for overrides to be set. */
+    public let overrides: ConfigMap?
+
     /** The key the task is stored within the package. */
     public let key: String
+    
 
     /** Initializes a new `Task` based on the given data. */
-    public init(package: Package, key: String, config: ConfigMap) {
+    public init(package: Package, key: String, config: ConfigMap, overrides: ConfigMap? = nil) {
         self.package = package
         self.key = key
         self.config = config
+        self.overrides = overrides
     }
     
     /** A convenience for indexing into the `config` map. */
     public subscript(key: String) -> Value? {
-        return (try? self.mergedConfig()[key]).flatMap { $0 }
+        return (try? self.mergedConfig(overrides)[key]).flatMap { $0 }
     }
     
     /**
      * Produces a new `ConfigMap` for the given task by merging together
      * all of the configuration information from the package.
      */ 
-    public func mergedConfig() throws -> ConfigMap {
-        if _mergedConfig == nil {
-            let overlays = (self.config[Package.Keys.UseOverlays]?.array ?? []).map { $0.string }.flatMap { $0 }
-            let packageOverlays = try packageConfigs(package, overlays: overlays)
-            
-            let taskOverlays = try mergeConfigs(overlays.map {
-                self.config[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
-            }.flatMap { $0 })
-            
-            _mergedConfig = try mergeConfigs([self.config, taskOverlays, packageOverlays].flatMap { $0 })
-        }
-        return _mergedConfig!
+    public func mergedConfig(overrides: ConfigMap? = nil) throws -> ConfigMap {
+        let overlays = [
+            overrides?[Package.Keys.UseOverlays]?.array,
+            self.config[Package.Keys.UseOverlays]?.array
+        ]
+            .flatMap { $0 }
+            .flatMap { $0 }
+            .map { $0.string }
+            .flatMap { $0 }
+        
+        let packageOverlays = try packageConfigs(package, overlays: overlays)
+        
+        let taskOverlays = try mergeConfigs(overlays.map {
+            self.config[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
+        }.flatMap { $0 })
+        
+        return try mergeConfigs([self.config, taskOverlays, packageOverlays, overrides].flatMap { $0 })
     }
-    private var _mergedConfig: ConfigMap? = nil
     
     /**
      * Merges a set of config maps in reverse order of precedence.
@@ -126,7 +135,7 @@ public final class Task {
 
     private func packageConfigs(package: Package, overlays: [String]) throws -> ConfigMap {
         var merged = try mergeConfigs(overlays.map { package.overlays?[$0]?.dictionary }.flatMap { $0 })
-        
+
         for package in package.importedPackages {
             merged = try mergeConfigs([packageConfigs(package, overlays: overlays), merged])
         }

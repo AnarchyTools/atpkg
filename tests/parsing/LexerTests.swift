@@ -14,7 +14,7 @@
 
 
 import Foundation
-import atpkg
+import AnarchyPackage
 
 func outputBaseline(lexer: Lexer) {
     print("--- baseline ---")

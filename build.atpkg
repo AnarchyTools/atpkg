@@ -16,33 +16,66 @@
 (package
   :name "atpkg"
   
-  :tasks {
-    :atpkg {
-      :tool "atllbuild"
-      :source ["src/**.swift"]
+  :overlays {
+    :atpkg-info {
       :name "atpkg"
-      :outputType "static-library"
+      :module-name "AnarchyPackage"
+      :output-type "static-library"
+      :sources ["atpkg/src/**.swift"]
+    }
+  }
+
+  :tasks {
+
+    :check {
+      :tool "shell"
+      :script "./tests/test.sh"
+      :dependencies ["atbuild"]
+    }
+    
+    
+    ;; Below are the boostrap examples of how one would typically specify
+    ;; the build configuration in order to create a boostrap system or
+    ;; output file that would work equally well with `llbuild`.
+    
+    :atpkg-config {
+      :tool "llbuild-config"
+      :use-overlays ["atpkg-info"]
       :overlays {
-        :bootstrap-osx {
-          :bootstrapOnly true
-          :llbuildyaml "bootstrap/bootstrap-macosx-atpkg.swift-build"
+        :macosx {
+          :config-file "bootstrap/bootstrap-macosx-atpkg.swift-build"
         }
-        :bootstrap-linux {
-          :bootstrapOnly true
-          :swiftCPath "/usr/local/bin/swiftc"
-          :linkSDK false
-          :llbuildyaml "bootstrap/bootstrap-linux-atpkg.swift-build"
+        :linux {
+          :config-file "bootstrap/bootstrap-linux-atpkg.swift-build"
+          :swiftc-path "/usr/local/bin/swiftc"
+          :link-sdk false
         }
       }
     }
+    
+    :atpkg-bootstrap {
+      :dependencies ["atpkg-config"]
+      :tool "llbuild-build"
+      :use-overlays ["atpkg-info"]
+    }
+    
+    
+    ;; Below are the non-boostrap examples of how one would typically specify
+    ;; the build configuration within their tasks. Overlays are used to share
+    ;; much of the same information between the tasks.
+    
+    :atpkg {
+      :use-overlays ["atpkg-info"]
+      :tool "llbuild"
+    }
 
     :atpkg-tests {
-      :tool "atllbuild"
+      :tool "llbuild"
       :dependencies ["atpkg"]
-      :source ["tests/**.swift"]
+      :sources ["tests/**.swift"]
       :name "atpkgtests"
-      :outputType "executable"
-      :linkWithProduct ["atpkg.a"]
+      :output-type "executable"
+      :link-with ["atpkg.a"]
     }
 
     :run-atpkg-tests {

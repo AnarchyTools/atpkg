@@ -14,7 +14,7 @@
 
 
 import Foundation
-import atpkg
+import AnarchyPackage
 
 class ParserTests: Test {
     required init() {}
