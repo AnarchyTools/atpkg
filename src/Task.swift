@@ -34,34 +34,27 @@ public final class Task {
     
     /** A convenience for indexing into the `config` map. */
     public subscript(key: String) -> Value? {
-        return self.config[key]
+        return (try? self.mergedConfig()[key]).flatMap { $0 }
     }
     
     /**
      * Produces a new `ConfigMap` for the given task by merging together
      * all of the configuration information from the package.
-     *
-     * @param override An override `ConfigMap` used when merging the data.
-     *                 This map will be treated as the highest priority map.
      */ 
-    public func mergedConfig(config: ConfigMap? = nil) throws -> ConfigMap {
-        let overlays = [
-            config?[Package.Keys.UseOverlays]?.array,
-            self.config[Package.Keys.UseOverlays]?.array
-        ]
-            .flatMap { $0 }
-            .flatMap { $0 }
-            .map { $0.string }
-            .flatMap { $0 }
+    public func mergedConfig() throws -> ConfigMap {
+        if _mergedConfig == nil {
+            let overlays = (self.config[Package.Keys.UseOverlays]?.array ?? []).map { $0.string }.flatMap { $0 }
+            let packageOverlays = try packageConfigs(package, overlays: overlays)
             
-        let packageOverlays = try packageConfigs(package, overlays: overlays)
-        
-        let taskOverlays = try mergeConfigs(overlays.map {
-            self.config[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
-        }.flatMap { $0 })
-        
-        return try mergeConfigs([self.config, taskOverlays, packageOverlays, config].flatMap { $0 })
+            let taskOverlays = try mergeConfigs(overlays.map {
+                self.config[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
+            }.flatMap { $0 })
+            
+            _mergedConfig = try mergeConfigs([self.config, taskOverlays, packageOverlays].flatMap { $0 })
+        }
+        return _mergedConfig!
     }
+    private var _mergedConfig: ConfigMap? = nil
     
     /**
      * Merges a set of config maps in reverse order of precedence.
