@@ -21,7 +21,7 @@
       :name "atpkg"
       :module-name "AnarchyPackage"
       :output-type "static-library"
-      :sources ["atpkg/src/**.swift"]
+      :sources ["src/**.swift"]
     }
   }
 
