@@ -78,8 +78,7 @@ class PackageTests: Test {
     static func testFolder() throws {
         let path = "./tests/collateral/import-folder.atpkg"
         let package = try Package(path: path)
-        guard let build = package.tasks["build"] else { try test.assert(false); return }
-        guard let build2 = package.tasks["folder.build"] else { try test.assert(false); return }
-
+        if package.tasks["build"] == nil { try test.assert(false); return }
+        if package.tasks["folder/build"] == nil { try test.assert(false); return }
     }
 }
