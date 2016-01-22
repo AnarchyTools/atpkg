@@ -65,8 +65,8 @@
     ;; much of the same information between the tasks.
     
     :atpkg {
-      :use-overlays ["atpkg-info"]
       :tool "llbuild"
+      :use-overlays ["atpkg-info"]
     }
 
     :atpkg-tests {
@@ -86,6 +86,7 @@
 
     :run-tests {
       :dependencies ["run-atpkg-tests"]
-      :tool "nop" }
+      :tool "nop"
     }
+  }
 )
