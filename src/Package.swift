@@ -15,7 +15,7 @@
 import Foundation
 
 /**
- * A package is the structural represtation of an `atpkg` file.
+ * A `Package` is the structural represtation of an `atpkg` file.
  */
 final public class Package {
     /** The file extension for all packages. */

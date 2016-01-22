@@ -8,6 +8,7 @@
   :overlays {
     :macosx {
       :compile-options ["--macosx-overlays-src"]
+      :something "new"
     }
   }
 
@@ -18,6 +19,7 @@
       :output-type "lib" 
       :source ["src/**.swift" "lib/**.swift"]
       :compile-options ["--task-compile-options"]
+      :something "same"
       :use-overlays ["macosx"]
       :overlays {
         :macosx {

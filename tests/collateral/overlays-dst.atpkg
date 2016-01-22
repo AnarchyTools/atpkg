@@ -5,6 +5,7 @@
   :overlays {
     :macosx {
       :compile-options ["--macosx-overlays-dst"]
+      :something "old"
     }
   }
 )

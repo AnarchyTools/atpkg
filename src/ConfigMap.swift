@@ -113,7 +113,7 @@ public func overlayedConfigMap(package: Package, task: String, cli: ConfigMap? =
         task[Package.Keys.Overlays]?.dictionary?[$0]?.dictionary
     }.flatMap { $0 })
     
-    return try mergeConfigs([packageOverlays, taskOverlays, task, cli].flatMap { $0 })
+    return try mergeConfigs([task, taskOverlays, packageOverlays, cli].flatMap { $0 })
 }
 
 private func packageConfigs(package: Package, overlays: [String]) throws -> ConfigMap {

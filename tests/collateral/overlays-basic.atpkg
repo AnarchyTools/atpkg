@@ -28,7 +28,7 @@
       :tool "lldb-build"
       :name "json-swift"
       :output-type "lib" 
-      :source [ "src/**.swift" "lib/**.swift" ]
+      :source ["src/**.swift" "lib/**.swift"]
       :compile-options ["-j8"]
     }
   }

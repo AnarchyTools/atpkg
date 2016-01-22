@@ -117,9 +117,10 @@ class PackageTests: Test {
         let config = try overlayedConfigMap(package, task: "build")
         
         try test.assert(config["compile-options"]?.array?.count == 4)
-        try test.assert(config["compile-options"]?.array?[0].string == "--macosx-overlays-dst")
-        try test.assert(config["compile-options"]?.array?[1].string == "--macosx-overlays-src")
-        try test.assert(config["compile-options"]?.array?[2].string == "--macosx-task")
-        try test.assert(config["compile-options"]?.array?[3].string == "--task-compile-options")
+        try test.assert(config["compile-options"]?.array?[0].string == "--task-compile-options")
+        try test.assert(config["compile-options"]?.array?[1].string == "--macosx-task")
+        try test.assert(config["compile-options"]?.array?[2].string == "--macosx-overlays-dst")
+        try test.assert(config["compile-options"]?.array?[3].string == "--macosx-overlays-src")
+        try test.assert(config["something"]?.string == "new")
     }
 }
