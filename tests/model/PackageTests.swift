@@ -24,7 +24,7 @@ class PackageTests: Test {
         // PackageTests.testMergeConfigs,
         // PackageTests.testInvalidMergeConfigs,
         PackageTests.testOverlays,
-        PackageTests.testFolder
+        PackageTests.testOverlays2
     ]
 
     let filename = __FILE__
@@ -75,12 +75,66 @@ class PackageTests: Test {
         try test.assert(config["something"]?.string == "new")
     }
 
-    static func testFolder() throws {
-        let path = "./tests/collateral/import-folder.atpkg"
-        let package = try Package(path: path)
-        if package.tasks["build"] == nil { try test.assert(false); return }
-        if package.tasks["folder/build"] == nil { try test.assert(false); return }
-        if package.tasks["folder/folder2/build"] == nil { try test.assert(false); return }
 
+    static func testOverlays2() throws {
+        let filepath = "./tests/collateral/overlays.atpkg"
+        let package = try Package(path: filepath, overrides: [:])
+        guard let compileOptions = try package.tasks["build"]?.mergedConfig()["compile-options"]?.array else {
+            fatalError("No compile options?")
+        }
+        try test.assert(compileOptions.count == 2)
+        try test.assert(compileOptions[0].string == "-D")
+        try test.assert(compileOptions[1].string == "AWESOME")
+
+        let package2 = try Package(path: filepath, overlays: ["more-awesome"]) 
+        guard let compileOptions2 = try package2.tasks["build"]?.mergedConfig()["compile-options"]?.array else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions2.count == 4)
+        try test.assert(compileOptions2[0].string == "-D")
+        try test.assert(compileOptions2[1].string == "AWESOME")
+        try test.assert(compileOptions2[2].string == "-D")
+        try test.assert(compileOptions2[3].string == "MORE_AWESOME")
+
+        let package3 = try Package(path: filepath, overlays: ["most-taskspecific"])
+        guard let compileOptions3 = try package3.tasks["build"]?.mergedConfig()["compile-options"]?.array else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions3.count == 4)
+        try test.assert(compileOptions3[0].string == "-D")
+        try test.assert(compileOptions3[1].string == "AWESOME")
+        try test.assert(compileOptions3[2].string == "-D")
+        try test.assert(compileOptions3[3].string == "MOST_AWESOME")
+
+        let package4 = try Package(path: filepath, overlays: ["most-taskspecific-two"])
+        guard let compileOptions4 = try package4.tasks["build"]?.mergedConfig()["compile-options"]?.array else {
+            fatalError("no compile options?")
+        }
+        try test.assert(compileOptions4.count == 4)
+        try test.assert(compileOptions4[0].string == "-D")
+        try test.assert(compileOptions4[1].string == "AWESOME")
+        try test.assert(compileOptions4[2].string == "-D")
+        try test.assert(compileOptions4[3].string == "MOST_AWESOME")
+
+        let package5 = try Package(path: filepath, overlays: ["stringOption"]) 
+        guard let stringOption = try package5.tasks["build"]?.mergedConfig()["stringOption"]?.string else {
+            fatalError("no string option?")
+        }
+        try test.assert(stringOption == "stringOption")
+
+        let package6 = try Package(path: filepath, overlays: ["emptyVecOption"]) 
+        guard let vecOption = try package6.tasks["build"]?.mergedConfig()["emptyVecOption"]?.array else {
+            fatalError("no vec option?")
+        }
+        try test.assert(vecOption.count == 1)
+
+        try test.assert(vecOption[0].string == "OVERLAY")
+
+        let package7 = try Package(path: filepath, overlays: ["boolOption"])
+        guard let boolOption = try package7.tasks["build"]?.mergedConfig()["boolOption"]?.bool else {
+            fatalError("no bool option?")
+        }
+        try test.assert(boolOption == true)
     }
+
 }

@@ -1,0 +1,48 @@
+;; A mixin sample file
+
+(package
+:name "overlay"
+:version "0.1.0-dev"
+
+:overlays {
+    :awesome {
+        :compile-options ["-D" "AWESOME"]
+    }
+    :more-awesome {
+        :compile-options ["-D" "MORE_AWESOME"]
+    }
+    :most-awesome {
+        :compile-options ["-D" "MOST_AWESOME"]
+    }
+    :stringOption {
+        :stringOption "stringOption"
+    }
+    :emptyVecOption {
+        :emptyVecOption ["OVERLAY"]
+    }
+    :boolOption {
+        :boolOption true
+    }
+}
+
+:tasks {
+    :build {
+        :tool "lldb-build"
+        :name "json-swift"
+        :output-type "lib" 
+        :source [ "src/**.swift" "lib/**.swift" ]
+        :compile-options []
+        :use-overlays ["awesome"]
+        :overlays {
+            :most-taskspecific {
+                :use-overlays ["most-awesome"]
+            }
+            :most-taskspecific-two {
+                :compile-options ["-D" "MOST_AWESOME"]
+            }
+        }
+    }
+}
+)
+
+; End of the sample.

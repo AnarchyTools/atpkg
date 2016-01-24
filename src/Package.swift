@@ -119,6 +119,17 @@ final public class Package {
             self.importedPackages = []
         }
     }
+
+
+    /**
+     * Initializes a new instance of `Package` from the contents of the file
+     * at the given `path`.
+     */
+    public convenience init(path: String, overlays: [String]) throws {
+        var c = ConfigMap()
+        c[Package.Keys.UseOverlays] = Value.ArrayLiteral(overlays.map() {Value.StringLiteral($0)})
+        try self.init(path: path, overrides: c)
+    }
     
     /**
      * Initializes a new instance of `Package` from the contents of the file
