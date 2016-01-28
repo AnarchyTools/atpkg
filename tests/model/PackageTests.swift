@@ -22,7 +22,8 @@ class PackageTests: Test {
         PackageTests.testBasic,
         PackageTests.testImport,
         PackageTests.testOverlays,
-        PackageTests.testExportedOverlays
+        PackageTests.testExportedOverlays,
+        PackageTests.testRequireOverlays
     ]
 
     let filename = __FILE__
@@ -136,5 +137,18 @@ class PackageTests: Test {
         try test.assert(compileOptions2[4].string == "-D")
         try test.assert(compileOptions2[5].string == "MOST_AWESOME")
 
+    }
+
+    static func testRequireOverlays() throws {
+        let filepath = "./tests/collateral/require_overlays.atpkg"
+        if let _ = Package(filepath: filepath, overlay: []) {
+            print("Overlays were not required")
+            try test.assert(false)
+        }
+        guard let _ = Package(filepath: filepath, overlay: ["osx"])  else {
+            print("Overlays were provided")
+            try test.assert(false)
+            fatalError()
+        }
     }
 }
