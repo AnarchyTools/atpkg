@@ -4,4 +4,4 @@ ADD https://github.com/AnarchyTools/atbuild/releases/download/0.5.1/atbuild-0.5.
 RUN tar xf atbuild.tar.xz -C /usr/local
 ADD . /atpkg
 WORKDIR atpkg
-RUN atbuild run-tests
+RUN atbuild check

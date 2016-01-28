@@ -51,7 +51,7 @@
             :script "./.atllbuild/products/atpkgtests"
           }
 
-          :run-tests {
+          :check {
             :dependencies ["run-atpkg-tests"]
             :tool "nop" }
           }
