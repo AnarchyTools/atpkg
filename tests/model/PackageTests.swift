@@ -22,7 +22,8 @@ class PackageTests: Test {
         PackageTests.testBasic,
         PackageTests.testImport,
         PackageTests.testOverlays,
-        PackageTests.testExportedOverlays
+        PackageTests.testExportedOverlays,
+        PackageTests.testChainedImports
     ]
 
     let filename = __FILE__
@@ -40,9 +41,9 @@ class PackageTests: Test {
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
         
-        try test.assert(package.tasks.count == 1)
+        try test.assert(package.tasks.count == 2) //indexed twice, by qualified and unqualified name
         for (key, task) in package.tasks {
-            try test.assert(key == "build")
+            try test.assert(key == "build" || key == "basic.build")
             try test.assert(task.tool == "lldb-build")
             try test.assert(task["name"]?.string == "json-swift")
             try test.assert(task["output-type"]?.string == "lib")
@@ -136,5 +137,29 @@ class PackageTests: Test {
         try test.assert(compileOptions2[4].string == "-D")
         try test.assert(compileOptions2[5].string == "MOST_AWESOME")
 
+    }
+
+    static func testChainedImports () throws {
+        let filepath = "./tests/collateral/chained_imports/a.atpkg"
+        guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
+        guard let a_default_unqualified = package.tasks["default"] else {
+            fatalError("No default task")
+        }
+        try test.assert(a_default_unqualified["name"]?.string == "a_default")
+
+        guard let a_default_qualified = package.tasks["a.default"] else {
+            fatalError("No default task (qualified)")
+        }
+        try test.assert(a_default_qualified["name"]?.string == "a_default")
+
+        guard let b_default_qualified = package.tasks["b.default"] else {
+            fatalError("No default task in b")
+        }
+        try test.assert(b_default_qualified["name"]?.string == "b_default")
+
+        guard let c_default_qualified = package.tasks["c.default"] else {
+            fatalError("No default task in c")
+        }
+        try test.assert(c_default_qualified["name"]?.string == "c_default")
     }
 }

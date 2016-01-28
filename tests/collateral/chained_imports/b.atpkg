@@ -1,0 +1,11 @@
+(package
+  :name "b"
+  :import ["c.atpkg"]
+
+  :tasks {
+    :default {
+        :dependencies ["c.default"]
+        :name "b_default"
+    }
+  }
+)
