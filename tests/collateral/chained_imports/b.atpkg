@@ -3,8 +3,11 @@
   :import ["c.atpkg"]
 
   :tasks {
+    :foo {
+
+    }
     :default {
-        :dependencies ["c.default"]
+        :dependencies ["c.default" "foo"]
         :name "b_default"
     }
   }

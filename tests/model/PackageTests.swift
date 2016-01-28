@@ -161,5 +161,9 @@ class PackageTests: Test {
             fatalError("No default task in c")
         }
         try test.assert(c_default_qualified["name"]?.string == "c_default")
+
+        //check package dependency graph
+        let _ = package.prunedDependencyGraph(a_default_unqualified)
+        
     }
 }

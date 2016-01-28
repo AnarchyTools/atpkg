@@ -159,7 +159,7 @@ final public class Package {
         if let dependencies = task["dependencies"]?.vector {
             for next in dependencies {
                 guard let depName = next.string else { fatalError("Non-string dependency \(next)")}
-                guard let nextTask = tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
+                guard let nextTask = task.package.tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
                 let nextGraph = prunedDependencyGraph(nextTask)
                 for nextItem in nextGraph {
                     let filteredTasks = pruned.filter() {$0.qualifiedName == nextItem.qualifiedName}
