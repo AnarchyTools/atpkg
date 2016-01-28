@@ -292,7 +292,7 @@ final public class Package {
         //load remote tasks
         for remotePackage in remotePackages {
             for (_, task) in remotePackage.tasks {
-                task.importedPath = remotePackage.adjustedImportPath
+                task.importedPath = task.package.adjustedImportPath
                 self.tasks[task.qualifiedName] = task
             }
         }

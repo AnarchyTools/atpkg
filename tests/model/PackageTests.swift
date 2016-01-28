@@ -23,7 +23,8 @@ class PackageTests: Test {
         PackageTests.testImport,
         PackageTests.testOverlays,
         PackageTests.testExportedOverlays,
-        PackageTests.testChainedImports
+        PackageTests.testChainedImports,
+        PackageTests.testImportPaths
     ]
 
     let filename = __FILE__
@@ -165,5 +166,40 @@ class PackageTests: Test {
         //check package dependency graph
         let _ = package.prunedDependencyGraph(a_default_unqualified)
         
+    }
+
+    static func testImportPaths () throws {
+        let filepath = "./tests/collateral/import_paths/a.atpkg"
+        guard let package = Package(filepath: filepath, overlay: []) else { print("error"); try test.assert(false); return }
+        guard let a_default_unqualified = package.tasks["default"] else {
+            fatalError("No default task")
+        }
+        try test.assert(a_default_unqualified["name"]?.string == "a_default")
+
+        guard let a_default_qualified = package.tasks["a.default"] else {
+            fatalError("No default task (qualified)")
+        }
+        try test.assert(a_default_qualified["name"]?.string == "a_default")
+
+        guard let b_default_qualified = package.tasks["b.default"] else {
+            fatalError("No default task in b")
+        }
+        try test.assert(b_default_qualified["name"]?.string == "b_default")
+
+        guard let c_default_qualified = package.tasks["c.default"] else {
+            fatalError("No default task in c")
+        }
+        try test.assert(c_default_qualified["name"]?.string == "c_default")
+
+        //check package dependency graph
+        let _ = package.prunedDependencyGraph(a_default_unqualified)
+
+        //check each import path
+        try test.assert(a_default_unqualified.importedPath == "./tests/collateral/import_paths/")
+        try test.assert(a_default_qualified.importedPath == "./tests/collateral/import_paths/")
+        try test.assert(b_default_qualified.importedPath == "./tests/collateral/import_paths/b/")
+        try test.assert(c_default_qualified.importedPath == "./tests/collateral/import_paths/b/c/")
+
+
     }
 }

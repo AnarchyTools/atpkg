@@ -1,0 +1,9 @@
+(package
+  :name "c"
+  
+  :tasks {
+    :default {
+        :name "c_default"
+    }
+  }
+)
