@@ -1,0 +1,14 @@
+(package
+  :name "require-overlays"
+  
+  :tasks {
+    :build {
+        :required-overlays [["osx" "linux"]]
+        :overlays {
+            :osx { }
+        }
+    }
+  }
+)
+
+; End of the sample.
