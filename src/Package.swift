@@ -149,6 +149,8 @@ final public class Package {
     appear only by qualified name. */
     public var tasks: [String:Task] = [:]
 
+    public var importedPath: String
+
     var overlays: [String: [String: ParseValue]] = [:]
     var adjustedImportPath: String = ""
 
@@ -172,10 +174,6 @@ final public class Package {
         return pruned
     }
     
-    public init(name: String) {
-        self.name = name
-    }
-    
     /**Create the package.
 - parameter filepath: The path to the file to load
 - parameter overlay: A list of overlays to apply globally to all tasks in the package. */
@@ -194,8 +192,9 @@ final public class Package {
     }
     
     public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
+        self.importedPath = pathOnDisk
+
         if type.name != "package" { return nil }
-        
         if let value = type.properties["name"]?.string { self.name = value }
         else {
             print("ERROR: No name specified for the package.")
