@@ -7,6 +7,7 @@
         :dependencies ["b.default"]
         :name "a_default"
         :overlay ["c.foo"]
+        :tool "whatever"
     }
   }
 )

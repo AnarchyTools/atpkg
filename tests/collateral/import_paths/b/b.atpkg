@@ -4,11 +4,12 @@
 
   :tasks {
     :foo {
-
+      :tool "whatever"
     }
     :default {
         :dependencies ["c.default" "foo"]
         :name "b_default"
+        :tool "whatever"
     }
   }
 )

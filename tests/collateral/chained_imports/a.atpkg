@@ -6,6 +6,7 @@
     :default {
         :dependencies ["b.default"]
         :name "a_default"
+        :tool "whatever"
     }
   }
 )

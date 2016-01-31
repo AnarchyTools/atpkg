@@ -4,6 +4,7 @@
   :tasks {
     :default {
         :name "c_default"
+        :tool "whatever"
     }
   }
 )
