@@ -151,7 +151,21 @@ final public class Package {
 
     public var importedPath: String
 
-    var overlays: [String: [String: ParseValue]] = [:]
+    ///Overlays that are a (direct) child of the receiver.  These are indexed by unqualified name.
+    private var childOverlays: [String: [String: ParseValue]] = [:]
+
+    ///Overlays that are an (indirect) child of the receiver.  these are indexed by qualified name.
+    private var importedOverlays: [String: [String: ParseValue]] = [:]
+
+    ///The union of childOverlays and importedOverlays
+    var overlays : [String: [String: ParseValue]] {
+        var arr = childOverlays
+        for (k,v) in importedOverlays {
+            arr[k] = v
+        }
+        return arr
+    }
+
     var adjustedImportPath: String = ""
 
     /**Calculate the pruned dependency graph for the given task
@@ -229,9 +243,13 @@ final public class Package {
 
         //load remote overlays
         for remotePackage in remotePackages {
-            for (overlayName, value) in remotePackage.overlays {
-                self.overlays["\(remotePackage.name).\(overlayName)"] = value
+            for (overlayName, value) in remotePackage.childOverlays {
+                self.importedOverlays["\(remotePackage.name).\(overlayName)"] = value
             }
+            for (overlayName, value) in remotePackage.importedOverlays {
+                self.importedOverlays[overlayName] = value
+            }
+
         }
         if let ol = type.properties["overlays"] {
             guard let overlays = ol.map else {
@@ -241,7 +259,7 @@ final public class Package {
                 guard let innerOverlay = overlay.map else {
                     fatalError("Non-map overlay \(overlay)")
                 }
-                self.overlays[name] = innerOverlay
+                self.childOverlays[name] = innerOverlay
             }
         }
 

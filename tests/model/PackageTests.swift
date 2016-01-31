@@ -24,7 +24,8 @@ class PackageTests: Test {
         PackageTests.testOverlays,
         PackageTests.testExportedOverlays,
         PackageTests.testChainedImports,
-        PackageTests.testImportPaths
+        PackageTests.testImportPaths,
+        PackageTests.testChainedImportOverlays
     ]
 
     let filename = __FILE__
@@ -41,7 +42,6 @@ class PackageTests: Test {
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
-        
         try test.assert(package.tasks.count == 2) //indexed twice, by qualified and unqualified name
         for (key, task) in package.tasks {
             try test.assert(key == "build" || key == "basic.build")
@@ -199,7 +199,19 @@ class PackageTests: Test {
         try test.assert(a_default_qualified.importedPath == "./tests/collateral/import_paths/")
         try test.assert(b_default_qualified.importedPath == "./tests/collateral/import_paths/b/")
         try test.assert(c_default_qualified.importedPath == "./tests/collateral/import_paths/b/c/")
+    }
 
-
+    static func testChainedImportOverlays() throws {
+        let filepath = "./tests/collateral/chained_import_overlays/a.atpkg"
+        guard let package = Package(filepath: filepath, overlay: ["b.foo"]) else { print("error"); try test.assert(false); return }
+        guard let a_qualified = package.tasks["a.default"] else { print("error"); try test.assert(false); return }
+        guard let options = a_qualified["compileOptions"]?.vector else {
+            fatalError("Invalid options vector")
+        }
+        try test.assert(options.count == 1)
+        for opt in options {
+            guard let str = opt.string else { fatalError("Non-string opt \(opt)")}
+            try test.assert(str == "foo")
+        }
     }
 }
