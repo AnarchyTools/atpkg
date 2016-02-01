@@ -16,7 +16,7 @@ import Foundation
 final public class Task {
     public var key: String = ""
     public var dependencies: [String] = []
-    public var tool: String = "atllbuild"
+    public var tool: String
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
 
     var overlay: [String] = [] ///The overlays we should apply to this task
@@ -34,7 +34,10 @@ final public class Task {
         self.kvp = kvp
         self.key = name
         self.allKeys = [String](kvp.keys)
-        self.tool = kvp["tool"]?.string ?? self.tool
+        guard let tool = kvp["tool"]?.string else {
+            fatalError("No tool for task \(name); did you forget to specify it?")
+        }
+        self.tool = tool
         if let ol = kvp["overlay"] {
             guard let overlays = ol.vector else {
                 fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
