@@ -15,12 +15,13 @@ import Foundation
 /**
  * This function resolves wildcards in source descriptions to complete values
  *   - parameter sourceDescriptions: a descriptions of sources such as ["src/**.swift"] */
+ *   - parameter taskForCalculatingPath: A task relative to which we calculate the path (to handle the import case).  If nil, we return what is listed in the atpkg.
  *   - returns: A list of resolved sources such as ["src/a.swift", "src/b.swift"]
  */
-public func collectSources(sourceDescriptions: [String], task: Task) -> [String] {
+public func collectSources(sourceDescriptions: [String], taskForCalculatingPath task: Task?) -> [String] {
     var sources : [String] = []
     for unPrefixedDescription in sourceDescriptions {
-        let description = task.importedPath + unPrefixedDescription
+        let description = (task?.importedPath ?? "") + unPrefixedDescription
         if description.hasSuffix("**.swift") {
             let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
             let manager = NSFileManager.defaultManager()

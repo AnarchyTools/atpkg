@@ -23,6 +23,9 @@ class PackageTests: Test {
         PackageTests.testImport,
         PackageTests.testOverlays,
         PackageTests.testExportedOverlays,
+        PackageTests.testChainedImports,
+        PackageTests.testImportPaths,
+        PackageTests.testChainedImportOverlays,
         PackageTests.nonVectorImport
     ]
 
@@ -40,10 +43,9 @@ class PackageTests: Test {
         
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
-        
-        try test.assert(package.tasks.count == 1)
+        try test.assert(package.tasks.count == 2) //indexed twice, by qualified and unqualified name
         for (key, task) in package.tasks {
-            try test.assert(key == "build")
+            try test.assert(key == "build" || key == "basic.build")
             try test.assert(task.tool == "lldb-build")
             try test.assert(task["name"]?.string == "json-swift")
             try test.assert(task["output-type"]?.string == "lib")
@@ -137,6 +139,81 @@ class PackageTests: Test {
         try test.assert(compileOptions2[4].string == "-D")
         try test.assert(compileOptions2[5].string == "MOST_AWESOME")
 
+    }
+
+    static func testChainedImports () throws {
+        let filepath = "./tests/collateral/chained_imports/a.atpkg"
+        let package = try Package(filepath: filepath, overlay: [])
+        guard let a_default_unqualified = package.tasks["default"] else {
+            fatalError("No default task")
+        }
+        try test.assert(a_default_unqualified["name"]?.string == "a_default")
+
+        guard let a_default_qualified = package.tasks["a.default"] else {
+            fatalError("No default task (qualified)")
+        }
+        try test.assert(a_default_qualified["name"]?.string == "a_default")
+
+        guard let b_default_qualified = package.tasks["b.default"] else {
+            fatalError("No default task in b")
+        }
+        try test.assert(b_default_qualified["name"]?.string == "b_default")
+
+        guard let c_default_qualified = package.tasks["c.default"] else {
+            fatalError("No default task in c")
+        }
+        try test.assert(c_default_qualified["name"]?.string == "c_default")
+
+        //check package dependency graph
+        let _ = package.prunedDependencyGraph(a_default_unqualified)
+        
+    }
+
+    static func testImportPaths () throws {
+        let filepath = "./tests/collateral/import_paths/a.atpkg"
+        let package = try Package(filepath: filepath, overlay: [])
+        guard let a_default_unqualified = package.tasks["default"] else {
+            fatalError("No default task")
+        }
+        try test.assert(a_default_unqualified["name"]?.string == "a_default")
+
+        guard let a_default_qualified = package.tasks["a.default"] else {
+            fatalError("No default task (qualified)")
+        }
+        try test.assert(a_default_qualified["name"]?.string == "a_default")
+
+        guard let b_default_qualified = package.tasks["b.default"] else {
+            fatalError("No default task in b")
+        }
+        try test.assert(b_default_qualified["name"]?.string == "b_default")
+
+        guard let c_default_qualified = package.tasks["c.default"] else {
+            fatalError("No default task in c")
+        }
+        try test.assert(c_default_qualified["name"]?.string == "c_default")
+
+        //check package dependency graph
+        let _ = package.prunedDependencyGraph(a_default_unqualified)
+
+        //check each import path
+        try test.assert(a_default_unqualified.importedPath == "./tests/collateral/import_paths/")
+        try test.assert(a_default_qualified.importedPath == "./tests/collateral/import_paths/")
+        try test.assert(b_default_qualified.importedPath == "./tests/collateral/import_paths/b/")
+        try test.assert(c_default_qualified.importedPath == "./tests/collateral/import_paths/b/c/")
+    }
+
+    static func testChainedImportOverlays() throws {
+        let filepath = "./tests/collateral/chained_import_overlays/a.atpkg"
+        let package = try Package(filepath: filepath, overlay: ["b.foo"])
+        guard let a_qualified = package.tasks["a.default"] else { print("error"); try test.assert(false); return }
+        guard let options = a_qualified["compileOptions"]?.vector else {
+            fatalError("Invalid options vector")
+        }
+        try test.assert(options.count == 1)
+        for opt in options {
+            guard let str = opt.string else { fatalError("Non-string opt \(opt)")}
+            try test.assert(str == "foo")
+        }
     }
 
     static func nonVectorImport() throws {
