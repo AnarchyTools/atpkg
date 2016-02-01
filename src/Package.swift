@@ -14,7 +14,17 @@
 import Foundation
 
 final public class Task {
-    public var key: String = ""
+    ///The unqualified name of the task, not including its package name
+    public let unqualifiedName: String
+
+    ///The qualified name of the task, including its package name
+    public var qualifiedName: String {
+        return package.name + "." + unqualifiedName
+    }
+
+    ///The package for the task
+    let package: Package
+
     public var dependencies: [String] = []
     public var tool: String
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
@@ -28,16 +38,21 @@ final public class Task {
     
     private var kvp: [String:ParseValue]
 
-    init?(value: ParseValue, name: String, importedPath: String) {
+    init?(value: ParseValue, unqualifiedName: String, package: Package, importedPath: String) {
+        precondition(!unqualifiedName.characters.contains("."), "Task \(unqualifiedName) may not contain a period.")
         guard let kvp = value.map else { return nil }
         self.importedPath = importedPath.pathWithTrailingSlash
         self.kvp = kvp
-        self.key = name
+        self.unqualifiedName = unqualifiedName
+        self.package = package
         self.allKeys = [String](kvp.keys)
+
         guard let tool = kvp["tool"]?.string else {
-            fatalError("No tool for task \(name); did you forget to specify it?")
+            self.tool = "invalid"
+            fatalError("No tool for task \(qualifiedName); did you forget to specify it?")
         }
         self.tool = tool
+
         if let ol = kvp["overlay"] {
             guard let overlays = ol.vector else {
                 fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
@@ -105,13 +120,13 @@ final public class Task {
 
                 case ParseValue.StringLiteral(let str):
                 if let existingValue = self[optionName] {
-                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value \(existingValue)")
+                    fatalError("Can't overlay on \(self.qualifiedName)[\(optionName)] which already has a value \(existingValue)")
                 }
                 self.kvp[optionName] = ParseValue.StringLiteral(str)
 
                 case ParseValue.BoolLiteral(let b):
                 if let existingValue = self[optionName] {
-                    fatalError("Can't overlay on \(self.key)[\(optionName)] which already has a value \(existingValue)")
+                    fatalError("Can't overlay on \(self.qualifiedName)[\(optionName)] which already has a value \(existingValue)")
                 }
                 self.kvp[optionName] = ParseValue.BoolLiteral(b)
 
@@ -134,9 +149,29 @@ final public class Package {
     
     // The optional properties. All optional properties must have a default value.
     public var version: String = ""
+
+    /**The tasks for the package.  For tasks in this package, they are indexed
+    both by qualified and unqualified name.  For tasks in another package, they
+    appear only by qualified name. */
     public var tasks: [String:Task] = [:]
 
-    var overlays: [String: [String: ParseValue]] = [:]
+    public var importedPath: String
+
+    ///Overlays that are a (direct) child of the receiver.  These are indexed by unqualified name.
+    private var childOverlays: [String: [String: ParseValue]] = [:]
+
+    ///Overlays that are an (indirect) child of the receiver.  these are indexed by qualified name.
+    private var importedOverlays: [String: [String: ParseValue]] = [:]
+
+    ///The union of childOverlays and importedOverlays
+    var overlays : [String: [String: ParseValue]] {
+        var arr = childOverlays
+        for (k,v) in importedOverlays {
+            arr[k] = v
+        }
+        return arr
+    }
+
     var adjustedImportPath: String = ""
 
     /**Calculate the pruned dependency graph for the given task
@@ -146,10 +181,10 @@ final public class Package {
         if let dependencies = task["dependencies"]?.vector {
             for next in dependencies {
                 guard let depName = next.string else { fatalError("Non-string dependency \(next)")}
-                guard let nextTask = tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
+                guard let nextTask = task.package.tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
                 let nextGraph = prunedDependencyGraph(nextTask)
                 for nextItem in nextGraph {
-                    let filteredTasks = pruned.filter() {$0.key == nextItem.key}
+                    let filteredTasks = pruned.filter() {$0.qualifiedName == nextItem.qualifiedName}
                     if filteredTasks.count >= 1 { continue }
                     pruned.append(nextItem)
                 }
@@ -157,10 +192,6 @@ final public class Package {
         }
         pruned.append(task)
         return pruned
-    }
-    
-    public init(name: String) {
-        self.name = name
     }
     
     /**Create the package.
@@ -181,8 +212,9 @@ final public class Package {
     }
     
     public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
+        self.importedPath = pathOnDisk
+
         if type.name != "package" { return nil }
-        
         if let value = type.properties["name"]?.string { self.name = value }
         else {
             print("ERROR: No name specified for the package.")
@@ -191,9 +223,10 @@ final public class Package {
         if let value = type.properties["version"]?.string { self.version = value }
 
         if let parsedTasks = type.properties["tasks"]?.map {
-            for (key, value) in parsedTasks {
-                if let task = Task(value: value, name: key, importedPath: pathOnDisk) {
-                    self.tasks[key] = task
+            for (name, value) in parsedTasks {
+                if let task = Task(value: value, unqualifiedName: name, package: self, importedPath: pathOnDisk) {
+                    self.tasks[task.unqualifiedName] = task
+                    self.tasks[task.qualifiedName] = task
                 }
             }
         }
@@ -216,9 +249,13 @@ final public class Package {
 
         //load remote overlays
         for remotePackage in remotePackages {
-            for (overlayName, value) in remotePackage.overlays {
-                self.overlays["\(remotePackage.name).\(overlayName)"] = value
+            for (overlayName, value) in remotePackage.childOverlays {
+                self.importedOverlays["\(remotePackage.name).\(overlayName)"] = value
             }
+            for (overlayName, value) in remotePackage.importedOverlays {
+                self.importedOverlays[overlayName] = value
+            }
+
         }
         if let ol = type.properties["overlays"] {
             guard let overlays = ol.map else {
@@ -228,7 +265,7 @@ final public class Package {
                 guard let innerOverlay = overlay.map else {
                     fatalError("Non-map overlay \(overlay)")
                 }
-                self.overlays[name] = innerOverlay
+                self.childOverlays[name] = innerOverlay
             }
         }
 
@@ -258,7 +295,7 @@ final public class Package {
                     if task.appliedOverlays.contains(overlayName) { continue }
 
                     guard let overlay = declaredOverlays[overlayName] else {
-                        print("Warning: Can't apply overlay \(overlayName) to task \(task.key)")
+                        print("Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)")
                         continue
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
@@ -291,7 +328,7 @@ final public class Package {
                         }
                         if task.appliedOverlays.contains(overlay) { continue nextSet }
                     }
-                    print("Task \(task.key) requires at least one of \(overlaySet.map() {$0.string}) but it was not applied.  Applied overlays: \(task.appliedOverlays)")
+                    print("Task \(task.qualifiedName) requires at least one of \(overlaySet.map() {$0.string}) but it was not applied.  Applied overlays: \(task.appliedOverlays)")
                     return nil
                 }
             }
@@ -300,9 +337,8 @@ final public class Package {
         //load remote tasks
         for remotePackage in remotePackages {
             for (_, task) in remotePackage.tasks {
-                task.importedPath = remotePackage.adjustedImportPath
-                task.key = "\(remotePackage.name).\(task.key)"
-                self.tasks[task.key] = task
+                task.importedPath = task.package.adjustedImportPath
+                self.tasks[task.qualifiedName] = task
             }
         }
 
