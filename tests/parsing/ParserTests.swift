@@ -58,7 +58,7 @@ class ParserTests: Test {
         try test.assert(outputType != nil)
         try test.assert(outputType?.string == "lib")
 
-        let source = build?.map?["source"]
+        let source = build?.map?["sources"]
         try test.assert(source != nil)
         try test.assert(source?.vector != nil)
         try test.assert(source?.vector?[0].string == "src/**.swift")
