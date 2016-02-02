@@ -3,7 +3,7 @@
 
   :overlays {
     :foo {
-        :compileOptions ["foo"]
+        :compile-options ["foo"]
     }
   }
   

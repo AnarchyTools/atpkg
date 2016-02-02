@@ -1,6 +1,6 @@
 (package
   :name "non-vector-import"
-  :import "Not a vector"
+  :import-packages "Not a vector"
 )
 
 ; End of the sample.

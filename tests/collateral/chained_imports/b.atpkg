@@ -1,6 +1,6 @@
 (package
   :name "b"
-  :import ["c.atpkg"]
+  :import-packages ["c.atpkg"]
 
   :tasks {
     :foo {

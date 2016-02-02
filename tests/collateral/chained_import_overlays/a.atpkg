@@ -1,12 +1,12 @@
 (package
   :name "a"
-  :import ["b.atpkg"]
+  :import-packages ["b.atpkg"]
 
   :tasks {
     :default {
         :dependencies ["b.default"]
         :name "a_default"
-        :overlay ["c.foo"]
+        :use-overlays ["c.foo"]
         :tool "whatever"
     }
   }

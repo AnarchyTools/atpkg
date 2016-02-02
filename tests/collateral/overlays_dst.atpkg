@@ -1,11 +1,10 @@
 (package
-:name "overlays_dst"
-:version "0.1.0-dev"
+  :name "overlays_dst"
+  :version "0.1.0-dev"
 
-:overlays {
+  :overlays {
     :exported-overlay {
-        :compileOptions ["-D" "MOST_AWESOME"]
+      :compile-options ["-D" "MOST_AWESOME"]
     }
-}
-
+  }
 )
