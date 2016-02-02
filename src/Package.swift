@@ -13,82 +13,15 @@
 // limitations under the License.
 import Foundation
 
-final public class Task {
-    ///The unqualified name of the task, not including its package name
-    public let unqualifiedName: String
-
-    ///The qualified name of the task, including its package name
-    public var qualifiedName: String {
-        return package.name + "." + unqualifiedName
-    }
-
-    ///The package for the task
-    let package: Package
-
-    public var dependencies: [String] = []
-    public var tool: String
-    public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
-
-    var overlay: [String] = [] ///The overlays we should apply to this task
-    var appliedOverlays: [String] = [] ///The overlays we did apply to this task
-
-    var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
-    
-    public var allKeys: [String]
-    
-    private var kvp: [String:ParseValue]
-
-    init?(value: ParseValue, unqualifiedName: String, package: Package, importedPath: String) {
-        precondition(!unqualifiedName.characters.contains("."), "Task \(unqualifiedName) may not contain a period.")
-        guard let kvp = value.map else { return nil }
-        self.importedPath = importedPath.pathWithTrailingSlash
-        self.kvp = kvp
-        self.unqualifiedName = unqualifiedName
-        self.package = package
-        self.allKeys = [String](kvp.keys)
-
-        guard let tool = kvp["tool"]?.string else {
-            self.tool = "invalid"
-            fatalError("No tool for task \(qualifiedName); did you forget to specify it?")
-        }
-        self.tool = tool
-
-        if let ol = kvp["overlay"] {
-            guard let overlays = ol.vector else {
-                fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
-            }
-            for overlay in overlays {
-                guard let str = overlay.string else {
-                    fatalError("Non-string overlay \(overlay)")
-                }
-                self.overlay.append(str)
-            }
-        }
-        if let ol = kvp["overlays"] {
-            guard let overlays = ol.map else {
-                fatalError("Non-map overlays \(ol); did you mean to use `overlay` instead?")
-            }
-            for (name, overlay) in overlays {
-
-                guard let innerOverlay = overlay.map else {
-                    fatalError("non-map overlay \(overlay)")
-                }
-                self.declaredOverlays[name] = innerOverlay
-            }
-        }
-
-        if let values = kvp["dependencies"]?.vector {
-            for value in values {
-                if let dep = value.string { self.dependencies.append(dep) }
-            }
-        }
-    }
-    
-    public subscript(key: String) -> ParseValue? {
-        return kvp[key]
-    }
-
-    /**Apply the overlay to the receiver
+enum PackageError: ErrorType {
+    case NonVectorImport
+    case ParserFailed
+    case NonPackage
+    case NoName
+    case RequiredOverlayNotPresent([String])
+}
+private extension Task {
+ /**Apply the overlay to the receiver
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
 - return: whether the overlay applied another overlay */
     @warn_unused_result
@@ -107,9 +40,9 @@ final public class Task {
                 }
                 var newValue = existingValue
                 newValue.appendContentsOf(vectorValue)
-                self.kvp[optionName] = ParseValue.Vector(newValue)
+                self[optionName] = ParseValue.Vector(newValue)
                 //apply overlays to the model property
-                if optionName == "overlay" {
+                if optionName == "use-overlays" {
                     for overlayName in vectorValue {
                         guard let overlayNameStr = overlayName.string else {
                             fatalError("Non-string overlayname \(overlayName)")
@@ -122,28 +55,35 @@ final public class Task {
                 if let existingValue = self[optionName] {
                     fatalError("Can't overlay on \(self.qualifiedName)[\(optionName)] which already has a value \(existingValue)")
                 }
-                self.kvp[optionName] = ParseValue.StringLiteral(str)
+                self[optionName] = ParseValue.StringLiteral(str)
 
                 case ParseValue.BoolLiteral(let b):
                 if let existingValue = self[optionName] {
                     fatalError("Can't overlay on \(self.qualifiedName)[\(optionName)] which already has a value \(existingValue)")
                 }
-                self.kvp[optionName] = ParseValue.BoolLiteral(b)
+                self[optionName] = ParseValue.BoolLiteral(b)
 
 
                 default:
                 fatalError("Canot overlay value \(optionValue); please file a bug")
             }
-            
-
-            
         }
         appliedOverlays.append(name)
-        return overlay.keys.contains("overlay")
+        return overlay.keys.contains("use-overlays")
     }
 }
 
 final public class Package {
+    public enum Keys: String {
+        case Name = "name"
+        case Version = "version"
+        case PackageTypeName = "package"
+        case ImportPackages = "import-packages"
+        case Tasks = "tasks"
+        case Overlays = "overlays"
+        case UseOverlays = "use-overlays"
+    }
+    
     // The required properties.
     public var name: String
     
@@ -197,32 +137,27 @@ final public class Package {
     /**Create the package.
 - parameter filepath: The path to the file to load
 - parameter overlay: A list of overlays to apply globally to all tasks in the package. */
-    public convenience init?(filepath: String, overlay: [String]) {
-        guard let parser = Parser(filepath: filepath) else { return nil }
+    public convenience init(filepath: String, overlay: [String]) throws {
+
+        //todo: why doesn't this throw?
+        guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
         
-        do {
-            let result = try parser.parse()
-            let basepath = filepath.toNSString.stringByDeletingLastPathComponent
-            self.init(type: result, overlay: overlay, pathOnDisk:basepath)
-        }
-        catch {
-            print("error: \(error)")
-            return nil
-        }
+        let result = try parser.parse()
+        let basepath = filepath.toNSString.stringByDeletingLastPathComponent
+        try self.init(type: result, overlay: overlay, pathOnDisk:basepath)
     }
     
-    public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
+    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) throws {
+        if type.name != "package" { throw PackageError.NonPackage }
         self.importedPath = pathOnDisk
 
-        if type.name != "package" { return nil }
-        if let value = type.properties["name"]?.string { self.name = value }
+        if let value = type.properties[Keys.Name.rawValue]?.string { self.name = value }
         else {
-            print("ERROR: No name specified for the package.")
-            return nil
+            throw PackageError.NoName
         }
-        if let value = type.properties["version"]?.string { self.version = value }
+        if let value = type.properties[Keys.Version.rawValue]?.string { self.version = value }
 
-        if let parsedTasks = type.properties["tasks"]?.map {
+        if let parsedTasks = type.properties[Keys.Tasks.rawValue]?.map {
             for (name, value) in parsedTasks {
                 if let task = Task(value: value, unqualifiedName: name, package: self, importedPath: pathOnDisk) {
                     self.tasks[task.unqualifiedName] = task
@@ -234,14 +169,15 @@ final public class Package {
         var remotePackages: [Package] = []
 
         //load remote packages
-        if let imports = type.properties["import"]?.vector {
+        if let imports_nv = type.properties[Keys.ImportPackages.rawValue] {
+            guard let imports = imports_nv.vector else {
+                throw PackageError.NonVectorImport
+            }
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
                 let adjustedFileName = importFileString.toNSString.lastPathComponent
-                guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays) else {
-                    fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
-                }
+                let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -257,7 +193,7 @@ final public class Package {
             }
 
         }
-        if let ol = type.properties["overlays"] {
+        if let ol = type.properties[Keys.Overlays.rawValue] {
             guard let overlays = ol.map else {
                 fatalError("Non-map overlay \(ol)")
             }
@@ -329,7 +265,7 @@ final public class Package {
                         if task.appliedOverlays.contains(overlay) { continue nextSet }
                     }
                     print("Task \(task.qualifiedName) requires at least one of \(overlaySet.map() {$0.string}) but it was not applied.  Applied overlays: \(task.appliedOverlays)")
-                    return nil
+                    throw PackageError.RequiredOverlayNotPresent(overlaySet.map() {$0.string!})
                 }
             }
         } 
@@ -341,7 +277,5 @@ final public class Package {
                 self.tasks[task.qualifiedName] = task
             }
         }
-
-
     }
 }
