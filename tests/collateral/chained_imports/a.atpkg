@@ -1,0 +1,12 @@
+(package
+  :name "a"
+  :import-packages ["b.atpkg"]
+
+  :tasks {
+    :default {
+        :dependencies ["b.default"]
+        :name "a_default"
+        :tool "whatever"
+    }
+  }
+)
