@@ -54,7 +54,7 @@ final public class Task {
 
         if let ol = kvp["use-overlays"] {
             guard let overlays = ol.vector else {
-                fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
+                fatalError("Non-vector use-overlays \(ol); did you mean to use `overlays` instead?")
             }
             for overlay in overlays {
                 guard let str = overlay.string else {
@@ -65,7 +65,7 @@ final public class Task {
         }
         if let ol = kvp["overlays"] {
             guard let overlays = ol.map else {
-                fatalError("Non-map overlays \(ol); did you mean to use `overlay` instead?")
+                fatalError("Non-map overlays \(ol); did you mean to use `use-overlays` instead?")
             }
             for (name, overlay) in overlays {
 
