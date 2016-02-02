@@ -143,6 +143,13 @@ final public class Task {
     }
 }
 
+enum PackageError: ErrorType {
+    case NonVectorImport
+    case ParserFailed
+    case NonPackage
+    case NoName
+}
+
 final public class Package {
     public enum Keys: String {
         case Name = "name"
@@ -207,28 +214,23 @@ final public class Package {
     /**Create the package.
 - parameter filepath: The path to the file to load
 - parameter overlay: A list of overlays to apply globally to all tasks in the package. */
-    public convenience init?(filepath: String, overlay: [String]) {
-        guard let parser = Parser(filepath: filepath) else { return nil }
+    public convenience init(filepath: String, overlay: [String]) throws {
+
+        //todo: why doesn't this throw?
+        guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
         
-        do {
-            let result = try parser.parse()
-            let basepath = filepath.toNSString.stringByDeletingLastPathComponent
-            self.init(type: result, overlay: overlay, pathOnDisk:basepath)
-        }
-        catch {
-            print("error: \(error)")
-            return nil
-        }
+        let result = try parser.parse()
+        let basepath = filepath.toNSString.stringByDeletingLastPathComponent
+        try self.init(type: result, overlay: overlay, pathOnDisk:basepath)
     }
     
-    public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
+    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) throws {
+        if type.name != "package" { throw PackageError.NonPackage }
         self.importedPath = pathOnDisk
 
-        if type.name != Keys.PackageTypeName.rawValue { return nil }
         if let value = type.properties[Keys.Name.rawValue]?.string { self.name = value }
         else {
-            print("ERROR: No name specified for the package.")
-            return nil
+            throw PackageError.NoName
         }
         if let value = type.properties[Keys.Version.rawValue]?.string { self.version = value }
 
@@ -244,14 +246,15 @@ final public class Package {
         var remotePackages: [Package] = []
 
         //load remote packages
-        if let imports = type.properties[Keys.ImportPackages.rawValue]?.vector {
+        if let imports_nv = type.properties[Keys.ImportPackages.rawValue] {
+            guard let imports = imports_nv.vector else {
+                throw PackageError.NonVectorImport
+            }
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
                 let adjustedFileName = importFileString.toNSString.lastPathComponent
-                guard let remotePackage = Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays) else {
-                    fatalError("Can't load remote package \(adjustedImportPath + adjustedFileName)")
-                }
+                let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
