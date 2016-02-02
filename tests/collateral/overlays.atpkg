@@ -1,44 +1,44 @@
 ;; A mixin sample file
 
 (package
-:name "overlay"
-:version "0.1.0-dev"
+  :name "overlay"
+  :version "0.1.0-dev"
 
-:overlays {
+  :overlays {
     :awesome {
-        :compileOptions ["-D" "AWESOME"]
+      :compile-options ["-D" "AWESOME"]
     }
     :more-awesome {
-        :compileOptions ["-D" "MORE_AWESOME"]
+      :compile-options ["-D" "MORE_AWESOME"]
     }
     :most-awesome {
-        :compileOptions ["-D" "MOST_AWESOME"]
+      :compile-options ["-D" "MOST_AWESOME"]
     }
-    :stringOption {
-        :stringOption "stringOption"
+    :string-option {
+      :string-option "stringOption"
     }
-    :emptyVecOption {
-        :emptyVecOption ["OVERLAY"]
+    :empty-vec-option {
+      :empty-vec-option ["OVERLAY"]
     }
-    :boolOption {
-        :boolOption true
+    :bool-option {
+      :bool-option true
     }
-}
+  }
 
-:tasks {
+  :tasks {
     :build {
         :tool "lldb-build"
         :name "json-swift"
         :output-type "lib" 
-        :source [ "src/**.swift" "lib/**.swift" ]
-        :compileOptions []
-        :overlay ["awesome"]
+        :sources [ "src/**.swift" "lib/**.swift" ]
+        :compile-options []
+        :use-overlays ["awesome"]
         :overlays {
             :most-taskspecific {
-                :overlay ["most-awesome"]
+                :use-overlays ["most-awesome"]
             }
             :most-taskspecific-two {
-                :compileOptions ["-D" "MOST_AWESOME"]
+                :compile-options ["-D" "MOST_AWESOME"]
             }
         }
     }

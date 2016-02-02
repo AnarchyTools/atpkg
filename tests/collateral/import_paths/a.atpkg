@@ -1,6 +1,6 @@
 (package
   :name "a"
-  :import ["b/b.atpkg"]
+  :import-packages ["b/b.atpkg"]
 
   :tasks {
     :default {

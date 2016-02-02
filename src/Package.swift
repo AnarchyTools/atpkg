@@ -53,7 +53,7 @@ final public class Task {
         }
         self.tool = tool
 
-        if let ol = kvp["overlay"] {
+        if let ol = kvp["use-overlays"] {
             guard let overlays = ol.vector else {
                 fatalError("Non-vector overlay \(ol); did you mean to use `overlays` instead?")
             }
@@ -109,7 +109,7 @@ final public class Task {
                 newValue.appendContentsOf(vectorValue)
                 self.kvp[optionName] = ParseValue.Vector(newValue)
                 //apply overlays to the model property
-                if optionName == "overlay" {
+                if optionName == "use-overlays" {
                     for overlayName in vectorValue {
                         guard let overlayNameStr = overlayName.string else {
                             fatalError("Non-string overlayname \(overlayName)")
@@ -139,11 +139,21 @@ final public class Task {
             
         }
         appliedOverlays.append(name)
-        return overlay.keys.contains("overlay")
+        return overlay.keys.contains("use-overlays")
     }
 }
 
 final public class Package {
+    public enum Keys: String {
+        case Name = "name"
+        case Version = "version"
+        case PackageTypeName = "package"
+        case ImportPackages = "import-packages"
+        case Tasks = "tasks"
+        case Overlays = "overlays"
+        case UseOverlays = "use-overlays"
+    }
+    
     // The required properties.
     public var name: String
     
@@ -214,15 +224,15 @@ final public class Package {
     public init?(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) {
         self.importedPath = pathOnDisk
 
-        if type.name != "package" { return nil }
-        if let value = type.properties["name"]?.string { self.name = value }
+        if type.name != Keys.PackageTypeName.rawValue { return nil }
+        if let value = type.properties[Keys.Name.rawValue]?.string { self.name = value }
         else {
             print("ERROR: No name specified for the package.")
             return nil
         }
-        if let value = type.properties["version"]?.string { self.version = value }
+        if let value = type.properties[Keys.Version.rawValue]?.string { self.version = value }
 
-        if let parsedTasks = type.properties["tasks"]?.map {
+        if let parsedTasks = type.properties[Keys.Tasks.rawValue]?.map {
             for (name, value) in parsedTasks {
                 if let task = Task(value: value, unqualifiedName: name, package: self, importedPath: pathOnDisk) {
                     self.tasks[task.unqualifiedName] = task
@@ -234,7 +244,7 @@ final public class Package {
         var remotePackages: [Package] = []
 
         //load remote packages
-        if let imports = type.properties["import"]?.vector {
+        if let imports = type.properties[Keys.ImportPackages.rawValue]?.vector {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
@@ -257,7 +267,7 @@ final public class Package {
             }
 
         }
-        if let ol = type.properties["overlays"] {
+        if let ol = type.properties[Keys.Overlays.rawValue] {
             guard let overlays = ol.map else {
                 fatalError("Non-map overlay \(ol)")
             }
