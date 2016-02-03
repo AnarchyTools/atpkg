@@ -26,7 +26,9 @@ class PackageTests: Test {
         PackageTests.testChainedImports,
         PackageTests.testImportPaths,
         PackageTests.testChainedImportOverlays,
-        PackageTests.nonVectorImport
+        PackageTests.nonVectorImport,
+        PackageTests.testRequireOverlays
+
     ]
 
     let filename = __FILE__
@@ -213,6 +215,25 @@ class PackageTests: Test {
         for opt in options {
             guard let str = opt.string else { fatalError("Non-string opt \(opt)")}
             try test.assert(str == "foo")
+        }
+    }
+
+    static func testRequireOverlays() throws {
+        let filepath = "./tests/collateral/require_overlays.atpkg"
+        do {
+            let _ = try Package(filepath: filepath, overlay: [])
+            print("Overlays were not required")
+            try test.assert(false)
+        }
+        catch {}
+
+        do {
+            let _ = try Package(filepath: filepath, overlay: ["osx"]) 
+        }
+        catch {
+            print("Overlays were provided")
+            try test.assert(false)
+
         }
     }
 
