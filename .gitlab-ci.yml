@@ -10,7 +10,7 @@ linux:
 osx:
     stage: build
     script: 
-        - atbuild run-tests
+        - atbuild check
     tags:
         - openswift
         - atbuild
