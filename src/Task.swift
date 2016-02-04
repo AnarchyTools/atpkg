@@ -29,7 +29,7 @@ final public class Task {
     public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
 
     var overlay: [String] = [] ///The overlays we should apply to this task
-    var appliedOverlays: [String] = [] ///The overlays we did apply to this task
+    internal(set) public var appliedOverlays: [String] = [] ///The overlays we did apply to this task
 
     var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
     
