@@ -53,7 +53,7 @@
       :script "bin/atpkgtests"
     }
 
-    :run-tests {
+    :check {
       :dependencies ["run-atpkg-tests"]
       :tool "nop" }
     }
