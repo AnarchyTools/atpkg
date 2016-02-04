@@ -22,6 +22,7 @@
       :sources ["src/**.swift"]
       :name "atpkg"
       :output-type "static-library"
+      :publish-product true
       :overlays {
         :bootstrap-osx {
           :bootstrap-only true
@@ -43,12 +44,13 @@
       :name "atpkgtests"
       :output-type "executable"
       :link-with ["atpkg.a"]
+      :publish-product true
     }
 
     :run-atpkg-tests {
       :tool "shell"
       :dependencies ["atpkg-tests"]
-      :script "./.atllbuild/products/atpkgtests"
+      :script "bin/atpkgtests"
     }
 
     :run-tests {

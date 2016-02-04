@@ -18,6 +18,7 @@ enum PackageError: ErrorType {
     case ParserFailed
     case NonPackage
     case NoName
+    case RequiredOverlayNotPresent([String])
 }
 private extension Task {
  /**Apply the overlay to the receiver
@@ -265,6 +266,28 @@ final public class Package {
                 print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
             }
         }
+
+        //error on required overlays
+        for (_, task) in self.tasks {
+            if let requiredOverlays_v = task["required-overlays"] {
+                guard let requiredOverlays = requiredOverlays_v.vector else {
+                    fatalError("Non-vector \(requiredOverlays_v)")
+                }
+                nextSet: for overlaySet_v in requiredOverlays {
+                    guard let overlaySet = overlaySet_v.vector else {
+                        fatalError("Non-vector \(overlaySet_v)")
+                    }
+                    for overlay_s in overlaySet {
+                        guard let overlay = overlay_s.string else {
+                            fatalError("Non-string \(overlay_s)")
+                        }
+                        if task.appliedOverlays.contains(overlay) { continue nextSet }
+                    }
+                    print("Task \(task.qualifiedName) requires at least one of \(overlaySet.map() {$0.string}) but it was not applied.  Applied overlays: \(task.appliedOverlays)")
+                    throw PackageError.RequiredOverlayNotPresent(overlaySet.map() {$0.string!})
+                }
+            }
+        } 
 
         //load remote tasks
         for remotePackage in remotePackages {
