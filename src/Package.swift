@@ -74,7 +74,7 @@ private extension Task {
 }
 
 final public class Package {
-    public enum Keys: String {
+    public enum Key: String {
         case Name = "name"
         case Version = "version"
         case PackageTypeName = "package"
@@ -82,6 +82,18 @@ final public class Package {
         case Tasks = "tasks"
         case Overlays = "overlays"
         case UseOverlays = "use-overlays"
+
+        static var allKeys: [Key] {
+            return [
+                    Name,
+                    Version,
+                    PackageTypeName,
+                    ImportPackages,
+                    Tasks,
+                    Overlays,
+                    UseOverlays
+            ]
+        }
     }
     
     // The required properties.
@@ -148,16 +160,23 @@ final public class Package {
     }
     
     public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) throws {
+        //warn on unknown keys
+        for (k,_) in type.properties {
+            if !Key.allKeys.map({$0.rawValue}).contains(k) {
+                print("Warning: unknown package key \(k)")
+            }
+        }
+
         if type.name != "package" { throw PackageError.NonPackage }
         self.importedPath = pathOnDisk
 
-        if let value = type.properties[Keys.Name.rawValue]?.string { self.name = value }
+        if let value = type.properties[Key.Name.rawValue]?.string { self.name = value }
         else {
             throw PackageError.NoName
         }
-        if let value = type.properties[Keys.Version.rawValue]?.string { self.version = value }
+        if let value = type.properties[Key.Version.rawValue]?.string { self.version = value }
 
-        if let parsedTasks = type.properties[Keys.Tasks.rawValue]?.map {
+        if let parsedTasks = type.properties[Key.Tasks.rawValue]?.map {
             for (name, value) in parsedTasks {
                 if let task = Task(value: value, unqualifiedName: name, package: self, importedPath: pathOnDisk) {
                     self.tasks[task.unqualifiedName] = task
@@ -169,7 +188,7 @@ final public class Package {
         var remotePackages: [Package] = []
 
         //load remote packages
-        if let imports_nv = type.properties[Keys.ImportPackages.rawValue] {
+        if let imports_nv = type.properties[Key.ImportPackages.rawValue] {
             guard let imports = imports_nv.vector else {
                 throw PackageError.NonVectorImport
             }
@@ -193,7 +212,7 @@ final public class Package {
             }
 
         }
-        if let ol = type.properties[Keys.Overlays.rawValue] {
+        if let ol = type.properties[Key.Overlays.rawValue] {
             guard let overlays = ol.map else {
                 fatalError("Non-map overlay \(ol)")
             }
