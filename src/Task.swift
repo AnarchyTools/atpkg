@@ -37,6 +37,22 @@ final public class Task {
     
     private var kvp: [String:ParseValue]
 
+    public enum Option: String {
+        case Tool = "tool"
+        case UseOverlays = "use-overlays"
+        case Overlays = "overlays"
+        case Dependencies = "dependencies"
+
+        public static var allOptions: [Option] {
+            return [
+                    Tool,
+                    UseOverlays,
+                    Overlays,
+                    Dependencies
+            ]
+        }
+    }
+
     init?(value: ParseValue, unqualifiedName: String, package: Package, importedPath: String) {
         precondition(!unqualifiedName.characters.contains("."), "Task \(unqualifiedName) may not contain a period.")
         guard let kvp = value.map else { return nil }
@@ -46,15 +62,15 @@ final public class Task {
         self.package = package
         self.allKeys = [String](kvp.keys)
 
-        guard let tool = kvp["tool"]?.string else {
+        guard let tool = kvp[Option.Tool.rawValue]?.string else {
             self.tool = "invalid"
             fatalError("No tool for task \(qualifiedName); did you forget to specify it?")
         }
         self.tool = tool
 
-        if let ol = kvp["use-overlays"] {
+        if let ol = kvp[Option.UseOverlays.rawValue] {
             guard let overlays = ol.vector else {
-                fatalError("Non-vector use-overlays \(ol); did you mean to use `overlays` instead?")
+                fatalError("Non-vector \(Option.UseOverlays.rawValue) \(ol); did you mean to use `\(Option.Overlays.rawValue)` instead?")
             }
             for overlay in overlays {
                 guard let str = overlay.string else {
@@ -63,9 +79,9 @@ final public class Task {
                 self.overlay.append(str)
             }
         }
-        if let ol = kvp["overlays"] {
+        if let ol = kvp[Option.Overlays.rawValue] {
             guard let overlays = ol.map else {
-                fatalError("Non-map overlays \(ol); did you mean to use `use-overlays` instead?")
+                fatalError("Non-map \(Option.Overlays.rawValue) \(ol); did you mean to use `\(Option.UseOverlays.rawValue)` instead?")
             }
             for (name, overlay) in overlays {
 
@@ -76,7 +92,7 @@ final public class Task {
             }
         }
 
-        if let values = kvp["dependencies"]?.vector {
+        if let values = kvp[Option.Dependencies.rawValue]?.vector {
             for value in values {
                 if let dep = value.string { self.dependencies.append(dep) }
             }
