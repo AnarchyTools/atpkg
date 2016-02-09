@@ -241,8 +241,7 @@ final public class Package {
                         let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
-                    } catch {
-                        print("Error: \(error)")
+                    } catch PackageError.ParserFailed {
                         print("Unsatisfied external dependency: \(externalDep.name), run atpm fetch")
                     }
                 } else {
