@@ -63,5 +63,30 @@ class ParserTests: Test {
         try test.assert(source?.vector != nil)
         try test.assert(source?.vector?[0].string == "src/**.swift")
         try test.assert(source?.vector?[1].string == "lib/**.swift")
+        
+        let build_osx = tasks?.map?["build.osx"]
+        try test.assert(build_osx != nil)
+
+        let tool_osx = build_osx?.map?["tool"]
+        try test.assert(tool_osx != nil)
+        try test.assert(tool_osx?.string == "lldb-build")
+
+        let buildName_osx = build_osx?.map?["name"]
+        try test.assert(buildName_osx != nil)
+        try test.assert(buildName_osx?.string == "json-swift-osx")
+
+        let buildNameShort_osx = build_osx?.map?["name.short"]
+        try test.assert(buildNameShort_osx != nil)
+        try test.assert(buildNameShort_osx?.string == "js-osx")
+
+        let outputType_osx = build_osx?.map?["output-type"]
+        try test.assert(outputType_osx != nil)
+        try test.assert(outputType_osx?.string == "lib")
+
+        let source_osx = build_osx?.map?["sources"]
+        try test.assert(source_osx != nil)
+        try test.assert(source_osx?.vector != nil)
+        try test.assert(source_osx?.vector?[0].string == "src/**.swift")
+        try test.assert(source_osx?.vector?[1].string == "lib/**.swift")
     }
 }

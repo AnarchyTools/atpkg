@@ -11,6 +11,14 @@
       :output-type "lib" 
       :sources ["src/**.swift" "lib/**.swift"]
     }
+    
+    :build.osx {
+      :tool "lldb-build"
+      :name "json-swift-osx"
+      :name.short "js-osx"
+      :output-type "lib" 
+      :sources ["src/**.swift" "lib/**.swift"]
+    }
   }
 )
 
