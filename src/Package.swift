@@ -80,6 +80,7 @@ final public class Package {
         case Version = "version"
         case PackageTypeName = "package"
         case ImportPackages = "import-packages"
+        case ExternalPackages = "external-packages"
         case Tasks = "tasks"
         case Overlays = "overlays"
         case UseOverlays = "use-overlays"
@@ -90,6 +91,7 @@ final public class Package {
                     Version,
                     PackageTypeName,
                     ImportPackages,
+                    ExternalPackages,
                     Tasks,
                     Overlays,
                     UseOverlays
