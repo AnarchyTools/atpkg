@@ -17,42 +17,44 @@
   :name "atpkg"
   
   :tasks {
-          :atpkg {
-            :tool "atllbuild"
-            :source ["src/**.swift"]
-            :name "atpkg"
-            :outputType "static-library"
-            :overlays {
-              :bootstrap-osx {
-                :bootstrapOnly true
-                :llbuildyaml "bootstrap/bootstrap-macosx-atpkg.swift-build"
-              }
-              :bootstrap-linux {
-                :bootstrapOnly true
-                :swiftCPath "/usr/local/bin/swiftc"
-                :linkSDK false
-                :llbuildyaml "bootstrap/bootstrap-linux-atpkg.swift-build"
-              }
-            }
-          }
+    :atpkg {
+      :tool "atllbuild"
+      :sources ["src/**.swift"]
+      :name "atpkg"
+      :output-type "static-library"
+      :publish-product true
+      :overlays {
+        :bootstrap-osx {
+          :bootstrap-only true
+          :llbuildyaml "bootstrap/bootstrap-macosx-atpkg.swift-build"
+        }
+        :bootstrap-linux {
+          :bootstrap-only true
+          :swiftc-path "/usr/local/bin/swiftc"
+          :link-sdk false
+          :llbuildyaml "bootstrap/bootstrap-linux-atpkg.swift-build"
+        }
+      }
+    }
 
-          :atpkg-tests {
-            :tool "atllbuild"
-            :dependencies ["atpkg"]
-            :source ["tests/**.swift"]
-            :name "atpkgtests"
-            :outputType "executable"
-            :linkWithProduct ["atpkg.a"]
-          }
+    :atpkg-tests {
+      :tool "atllbuild"
+      :dependencies ["atpkg"]
+      :sources ["tests/**.swift"]
+      :name "atpkgtests"
+      :output-type "executable"
+      :link-with ["atpkg.a"]
+      :publish-product true
+    }
 
-          :run-atpkg-tests {
-            :tool "shell"
-            :dependencies ["atpkg-tests"]
-            :script "./.atllbuild/products/atpkgtests"
-          }
+    :run-atpkg-tests {
+      :tool "shell"
+      :dependencies ["atpkg-tests"]
+      :script "bin/atpkgtests"
+    }
 
-          :run-tests {
-            :dependencies ["run-atpkg-tests"]
-            :tool "nop" }
-          }
+    :check {
+      :dependencies ["run-atpkg-tests"]
+      :tool "nop" }
+    }
 )

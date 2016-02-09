@@ -1,0 +1,16 @@
+(package
+  :name "c"
+
+  :overlays {
+    :foo {
+        :compile-options ["foo"]
+    }
+  }
+  
+  :tasks {
+    :default {
+        :name "c_default"
+        :tool "whatever"
+    }
+  }
+)
