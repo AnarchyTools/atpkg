@@ -31,7 +31,7 @@ class PackageTests: Test {
 
     ]
 
-    let filename = __FILE__
+    let filename = #file
     
     static func testBasic() throws {
         let filepath = "./tests/collateral/basic.atpkg"
