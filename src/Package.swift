@@ -151,19 +151,26 @@ final public class Package {
     }
 
     /**Create the package.
-- parameter filepath: The path to the file to load
-- parameter overlay: A list of overlays to apply globally to all tasks in the package. */
-    public convenience init(filepath: String, overlay: [String]) throws {
+    - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
+    - parameter overlay: A list of overlays to apply globally to all tasks in the package.
+    - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
+*/
+    public convenience init(filepath: String, overlay: [String], focusOnTask: String?) throws {
 
         //todo: why doesn't this throw?
         guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
 
         let result = try parser.parse()
         let basepath = filepath.toNSString.stringByDeletingLastPathComponent
-        try self.init(type: result, overlay: overlay, pathOnDisk:basepath)
+        try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask)
     }
 
-    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String) throws {
+    /**
+    - parameter overlay: The names of things to overlay.
+    - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
+    - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
+    */
+    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String, focusOnTask: String?) throws {
         //warn on unknown keys
         for (k,_) in type.properties {
             if !Key.allKeys.map({$0.rawValue}).contains(k) {
@@ -200,7 +207,7 @@ final public class Package {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
                 let adjustedFileName = importFileString.toNSString.lastPathComponent
-                let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays)
+                let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -276,6 +283,7 @@ final public class Package {
         var usedGlobalOverlays : [String] = []
         //swap in overlays
 
+        var warnings: [String] = []
         while true {
             var again = false
             for (_, task) in self.tasks {
@@ -299,7 +307,11 @@ final public class Package {
                     if task.appliedOverlays.contains(overlayName) { continue }
 
                     guard let overlay = declaredOverlays[overlayName] else {
-                        print("Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)")
+                        if focusOnTask == task.unqualifiedName || focusOnTask == task.qualifiedName {
+                            let proposedWarning = "Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)"
+                            if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
+
+                        }
                         continue
                     }
                     again = again || task.applyOverlay(overlayName, overlay: overlay)
@@ -307,6 +319,9 @@ final public class Package {
                 }
             }
             if !again { break }
+        }
+        for warning in warnings {
+            print(warning)
         }
 
         //warn about unused global overlays

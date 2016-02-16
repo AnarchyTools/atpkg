@@ -41,7 +41,7 @@ class ScannerTests: Test {
         ScannerTests.testBasicClj
     ]
 
-    let filename = __FILE__
+    let filename = #file
 
     static func testBasicClj() throws {
         let filepath = "./tests/collateral/basic.atpkg"
