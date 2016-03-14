@@ -245,7 +245,7 @@ final public class Package {
                     let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
                     let adjustedFileName = importFileString.toNSString.lastPathComponent
                     do {
-                        let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays)
+                        let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
                     } catch PackageError.ParserFailed {
