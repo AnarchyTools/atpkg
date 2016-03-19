@@ -13,7 +13,7 @@
 // limitations under the License.
 import Foundation
 
-enum PackageError: ErrorType {
+enum PackageError: ErrorProtocol {
     case NonVectorImport
     case ParserFailed
     case NonPackage
@@ -39,7 +39,7 @@ private extension Task {
                     existingValue = []
                 }
                 var newValue = existingValue
-                newValue.appendContentsOf(vectorValue)
+                newValue.append(contentsOf: vectorValue)
                 self[optionName] = ParseValue.Vector(newValue)
                 //apply overlays to the model property
                 if optionName == "use-overlays" {
@@ -157,7 +157,7 @@ final public class Package {
         guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
         
         let result = try parser.parse()
-        let basepath = filepath.toNSString.stringByDeletingLastPathComponent
+        let basepath = filepath.toNSString.deletingLastPathComponent
         try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask)
     }
     
@@ -201,7 +201,7 @@ final public class Package {
             }
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
-                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
+                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.deletingLastPathComponent.pathWithTrailingSlash
                 let adjustedFileName = importFileString.toNSString.lastPathComponent
                 let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
                 remotePackage.adjustedImportPath = adjustedImportPath

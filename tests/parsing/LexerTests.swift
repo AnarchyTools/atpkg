@@ -19,7 +19,7 @@ import atpkg
 func outputBaseline(lexer: Lexer) {
     print("--- baseline ---")
     while let token = lexer.next() {
-        let type = String(reflecting: token.type).stringByReplacingOccurrencesOfString("atpkgparser.", withString: "")
+        let type = String(reflecting: token.type).replacingOccurrences(of: "atpkgparser.", with: "")
         var value = ""
         
         switch token.type {

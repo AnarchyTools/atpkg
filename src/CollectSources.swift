@@ -25,7 +25,7 @@ public func collectSources(sourceDescriptions: [String], taskForCalculatingPath 
         if description.hasSuffix("**.swift") {
             let basepath = String(Array(description.characters)[0..<description.characters.count - 9])
             let manager = NSFileManager.defaultManager()
-            guard let enumerator = manager.enumeratorAtPath(basepath) else {
+            guard let enumerator = manager.enumerator(atPath: basepath) else {
                 fatalError("Invalid path \(basepath)")
             }
             while let source_ns = enumerator.nextObject() as? NSString {

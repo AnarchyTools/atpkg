@@ -16,7 +16,7 @@
 import Foundation
 
 
-extension String : ErrorType {}
+extension String : ErrorTypeCompatibility {}
 
 enum test {
     static func assert(condition: Bool, file: String = #file, functionName: String = #function, line: Int = #line) throws {
