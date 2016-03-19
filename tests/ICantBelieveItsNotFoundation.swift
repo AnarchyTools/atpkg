@@ -32,3 +32,12 @@ extension NSString {
         #endif
     }
 }
+
+//these parts of the Swift 3 API changes are not yet implemented on Linux
+#if os(Linux)
+extension String {
+    public func replacingOccurrences(of target: String, with replacement: String, options: NSStringCompareOptions = [], range searchRange: Range<Index>? = nil) -> String {
+        return self.stringByReplacingOccurrencesOfString(target, withString: replacement, options: options, range: searchRange)
+    }
+}
+#endif
