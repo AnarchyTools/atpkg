@@ -64,15 +64,15 @@ func isCharacterPartOfSet(c: Character?, set: NSCharacterSet) -> Bool {
 }
 
 func isValidIdentifierSignalCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.letterCharacterSet()) 
+    return isCharacterPartOfSet(c, set: NSCharacterSet.letter())
 }
 
 func isValidIdenitifierCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.letterCharacterSet()) || c == "-" || c == "." || c == "/"
+    return isCharacterPartOfSet(c, set: NSCharacterSet.letter()) || c == "-" || c == "." || c == "/"
 }
 
 func isWhitespace(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.whitespaceCharacterSet())
+    return isCharacterPartOfSet(c, set: NSCharacterSet.whitespace())
 }
 
 final public class Lexer {

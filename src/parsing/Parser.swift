@@ -14,7 +14,7 @@
 
 import Foundation
 
-public enum ParseError: ErrorType {
+public enum ParseError: ErrorProtocol {
     case InvalidPackageFile
     case ExpectedTokenType(TokenType, Token?)
     case InvalidTokenForValueType(Token?)
