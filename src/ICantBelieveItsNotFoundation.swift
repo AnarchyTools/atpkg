@@ -34,7 +34,7 @@ extension String {
     }
 
     public func substringToIndex(index: Int) -> String {
-        return self.subStringWithRange(self.startIndex..<self.startIndex.advancedBy(index))
+        return self.subStringWithRange(self.startIndex..<self.startIndex.advanced(by:index))
     }
     #endif
 }
