@@ -242,7 +242,7 @@ final public class Package {
                     let importFileString = "external/" + externalDep.name + "/build.atpkg"
 
                     // import the atbuild file if it is there
-                    let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.stringByDeletingLastPathComponent.pathWithTrailingSlash
+                    let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.deletingLastPathComponent.pathWithTrailingSlash
                     let adjustedFileName = importFileString.toNSString.lastPathComponent
                     do {
                         let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
