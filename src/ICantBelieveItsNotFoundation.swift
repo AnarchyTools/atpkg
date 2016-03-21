@@ -24,7 +24,7 @@ extension String {
         #endif
     }
     #if os(Linux)
-    public func subStringWithRange(range: Range<String.Index>) -> String {
+    public func substring(with range: Range<String.Index>) -> String {
         var result = ""
         result.reserveCapacity(range.count)
         for idx in range {
@@ -33,8 +33,8 @@ extension String {
         return result
     }
 
-    public func substringToIndex(index: Int) -> String {
-        return self.subStringWithRange(self.startIndex..<self.startIndex.advanced(by:index))
+    public func substring(to index: Int) -> String {
+        return self.substring(with: self.startIndex..<self.startIndex.advanced(by:index))
     }
     #endif
 }
@@ -77,6 +77,10 @@ extension NSFileManager {
 extension NSString {
     var deletingLastPathComponent: String {
         return self.stringByDeletingLastPathComponent
+    }
+
+    func substring(to index: Int) -> String {
+        return self.substringToIndex(index)
     }
 }
 #endif

@@ -26,7 +26,7 @@ final public class ExternalDependency {
     public var name: String {
         let lastComponent = gitURL.toNSString.lastPathComponent
         if lastComponent.hasSuffix(".git") {
-            return lastComponent.toNSString.substringToIndex(lastComponent.characters.count - 4)
+            return lastComponent.toNSString.substring(to: lastComponent.characters.count - 4)
         }
         return lastComponent
     }
