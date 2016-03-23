@@ -23,6 +23,20 @@ extension String {
         return (self as NSString)
         #endif
     }
+    #if os(Linux)
+    public func substring(with range: Range<String.Index>) -> String {
+        var result = ""
+        result.reserveCapacity(range.count)
+        for idx in range {
+            result.append(self.characters[idx])
+        }
+        return result
+    }
+
+    public func substring(to index: Int) -> String {
+        return self.substring(with: self.startIndex..<self.startIndex.advanced(by:index))
+    }
+    #endif
 }
 extension NSString {
     var toString: String {
@@ -63,6 +77,10 @@ extension NSFileManager {
 extension NSString {
     var deletingLastPathComponent: String {
         return self.stringByDeletingLastPathComponent
+    }
+
+    func substring(to index: Int) -> String {
+        return self.substringToIndex(index)
     }
 }
 #endif

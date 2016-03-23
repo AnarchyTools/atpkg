@@ -20,6 +20,7 @@ enum PackageError: ErrorProtocol {
     case NoName
     case RequiredOverlayNotPresent([String])
 }
+
 private extension Task {
  /**Apply the overlay to the receiver
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
@@ -79,6 +80,7 @@ final public class Package {
         case Version = "version"
         case PackageTypeName = "package"
         case ImportPackages = "import-packages"
+        case ExternalPackages = "external-packages"
         case Tasks = "tasks"
         case Overlays = "overlays"
         case UseOverlays = "use-overlays"
@@ -89,16 +91,17 @@ final public class Package {
                     Version,
                     PackageTypeName,
                     ImportPackages,
+                    ExternalPackages,
                     Tasks,
                     Overlays,
                     UseOverlays
             ]
         }
     }
-    
+
     // The required properties.
     public var name: String
-    
+
     // The optional properties. All optional properties must have a default value.
     public var version: String = ""
 
@@ -106,6 +109,7 @@ final public class Package {
     both by qualified and unqualified name.  For tasks in another package, they
     appear only by qualified name. */
     public var tasks: [String:Task] = [:]
+    public var externals: [ExternalDependency] = []
 
     public var importedPath: String
 
@@ -145,7 +149,7 @@ final public class Package {
         pruned.append(task)
         return pruned
     }
-    
+
     /**Create the package.
     - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
     - parameter overlay: A list of overlays to apply globally to all tasks in the package.
@@ -155,12 +159,12 @@ final public class Package {
 
         //todo: why doesn't this throw?
         guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
-        
+
         let result = try parser.parse()
         let basepath = filepath.toNSString.deletingLastPathComponent
         try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask)
     }
-    
+
     /**
     - parameter overlay: The names of things to overlay.
     - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
@@ -208,6 +212,51 @@ final public class Package {
                 remotePackages.append(remotePackage)
             }
         }
+
+        // load external dependencies
+        if let externalDeps = type.properties["external-packages"]?.vector {
+            for dep in externalDeps {
+                guard let d = dep.map else { fatalError("Non-Map external dependency declaration") }
+                guard let url = d["url"]?.string else { fatalError("No URL in dependency declaration") }
+                var externalDep: ExternalDependency? = nil
+                if let version = d["version"]?.vector {
+                    var versionDecl = [String]()
+                    for ver in version {
+                        if let v = ver.string {
+                            versionDecl.append(v)
+                        } else {
+                            fatalError("Could not parse external dependency version declaration for \(url)")
+                        }
+                    }
+                    externalDep = ExternalDependency(url: url, version: versionDecl)
+                } else if let branch = d["branch"]?.string {
+                    externalDep = ExternalDependency(url: url, branch: branch)
+                } else if let commit = d["commit"]?.string {
+                    externalDep = ExternalDependency(url: url, commit: commit)
+                } else if let tag = d["tag"]?.string {
+                    externalDep = ExternalDependency(url: url, tag: tag)
+                }
+                if let externalDep = externalDep {
+                    // add to external deps
+                    self.externals.append(externalDep)
+                    let importFileString = "external/" + externalDep.name + "/build.atpkg"
+
+                    // import the atbuild file if it is there
+                    let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.deletingLastPathComponent.pathWithTrailingSlash
+                    let adjustedFileName = importFileString.toNSString.lastPathComponent
+                    do {
+                        let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                        remotePackage.adjustedImportPath = adjustedImportPath
+                        remotePackages.append(remotePackage)
+                    } catch PackageError.ParserFailed {
+                        print("Unsatisfied external dependency: \(externalDep.name), run atpm fetch")
+                    }
+                } else {
+                    fatalError("Could not parse external dependency declaration for \(url)")
+                }
+            }
+        }
+
 
         //load remote overlays
         for remotePackage in remotePackages {
@@ -302,7 +351,7 @@ final public class Package {
                     throw PackageError.RequiredOverlayNotPresent(overlaySet.map() {$0.string!})
                 }
             }
-        } 
+        }
 
         //load remote tasks
         for remotePackage in remotePackages {
