@@ -179,7 +179,7 @@ final public class Package {
         }
 
         if type.name != "package" { throw PackageError.NonPackage }
-        self.importedPath = pathOnDisk
+        self.importedPath = pathOnDisk.pathWithTrailingSlash
 
         if let value = type.properties[Key.Name.rawValue]?.string { self.name = value }
         else {
