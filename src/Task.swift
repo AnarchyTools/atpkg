@@ -22,7 +22,7 @@ final public class Task {
     }
 
     ///The package for the task
-    let package: Package
+    public let package: Package
 
     public var dependencies: [String] = []
     public var tool: String

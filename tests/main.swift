@@ -55,7 +55,7 @@ extension Test {
 
 let tests: [Test] = [
     // NOTE: Add your test classes here...
-    
+    SubstitutionTests(),
     ScannerTests(),
     LexerTests(),
     ParserTests(),
