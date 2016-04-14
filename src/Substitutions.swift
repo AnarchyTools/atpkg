@@ -23,7 +23,7 @@ private func evaluateSubstitution(substitution: String, package: Package) -> Str
             }
             str_sources.append(str_s)
         }
-        let collectedSources = collectSources(str_sources, taskForCalculatingPath: task)
+        let collectedSources = collectSources(sourceDescriptions: str_sources, taskForCalculatingPath: task)
         var output = ""
         for (idx, source) in collectedSources.enumerated() {
             output += source
@@ -58,7 +58,7 @@ public func evaluateSubstitutions(input: String, package: Package)-> String {
                         output.characters.append(char)
                 }
 
-            case .Escaped: 
+            case .Escaped:
                 output.characters.append(char)
                 parseState = .Initial
 
@@ -78,7 +78,7 @@ public func evaluateSubstitutions(input: String, package: Package)-> String {
             case .SubstitutionName:
                 switch(char) {
                     case "}":
-                        output += evaluateSubstitution(currentSubstitionName, package: package)
+                        output += evaluateSubstitution(substitution: currentSubstitionName, package: package)
                         currentSubstitionName = ""
                         parseState = .Initial
                     default:

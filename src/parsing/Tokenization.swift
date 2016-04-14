@@ -43,7 +43,7 @@ public struct Token: Equatable {
     public let line: Int
     public let column: Int
     public let type: TokenType
-    
+
     public init(type: TokenType, value: String = "", line: Int = 0, column: Int = 0) {
         self.type = type
         self.value = value
@@ -64,23 +64,23 @@ func isCharacterPartOfSet(c: Character?, set: NSCharacterSet) -> Bool {
 }
 
 func isValidIdentifierSignalCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.letter())
+    return isCharacterPartOfSet(c: c, set: NSCharacterSet.letters())
 }
 
 func isValidIdenitifierCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.letter()) || c == "-" || c == "." || c == "/"
+    return isCharacterPartOfSet(c: c, set: NSCharacterSet.letters()) || c == "-" || c == "." || c == "/"
 }
 
 func isWhitespace(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c, set: NSCharacterSet.whitespace())
+    return isCharacterPartOfSet(c: c, set: NSCharacterSet.whitespaces())
 }
 
 final public class Lexer {
     var scanner: Scanner
     var current: Token? = nil
-    
+
     var shouldStall = false
-    
+
     public init(scanner: Scanner) {
         self.scanner = scanner
     }
@@ -90,13 +90,13 @@ final public class Lexer {
             shouldStall = false
             return current
         }
-        
+
         func work() -> Token {
             if scanner.next() == nil { return Token(type: .EOF) }
 
             scanner.stall()
 
-            while let info = scanner.next() where isWhitespace(info.character) {}
+            while let info = scanner.next() where isWhitespace(c: info.character) {}
             scanner.stall()
 
             guard let next = scanner.next() else { return Token(type: .EOF) }
@@ -104,9 +104,9 @@ final public class Lexer {
             if next.character == "\n" {
                 return Token(type: .Terminal, value: "\n", line: next.line, column: next.column)
             }
-            else if isValidIdentifierSignalCharacter(next.character) {
+            else if isValidIdentifierSignalCharacter(c: next.character) {
                 var content = String(next.character!)
-                while let info = scanner.next() where isValidIdenitifierCharacter(info.character) {
+                while let info = scanner.next() where isValidIdenitifierCharacter(c: info.character) {
                     content.append(info.character!)
                 }
                 scanner.stall()
@@ -141,7 +141,7 @@ final public class Lexer {
 
                 while let info = scanner.next() where info.character == ";" {}
                 scanner.stall()
-                
+
                 while let info = scanner.next() where info.character != "\n" {
                     comment.append(info.character!)
                 }
@@ -167,7 +167,7 @@ final public class Lexer {
         else {
             self.current = work()
         }
-        
+
         return self.current
     }
 
@@ -182,7 +182,7 @@ final public class Lexer {
     public func peek() -> Token? {
         return current
     }
-    
+
     public func stall() {
         shouldStall = true
     }

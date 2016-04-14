@@ -138,7 +138,7 @@ final public class Package {
             for next in dependencies {
                 guard let depName = next.string else { fatalError("Non-string dependency \(next)")}
                 guard let nextTask = task.package.tasks[depName] else { fatalError("Can't find so-called task \(depName)")}
-                let nextGraph = prunedDependencyGraph(nextTask)
+                let nextGraph = prunedDependencyGraph(task: nextTask)
                 for nextItem in nextGraph {
                     let filteredTasks = pruned.filter() {$0.qualifiedName == nextItem.qualifiedName}
                     if filteredTasks.count >= 1 { continue }
@@ -301,7 +301,7 @@ final public class Package {
                     guard let overlay = declaredOverlays[overlayName] else {
                         fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
                     }
-                    again = again || task.applyOverlay(overlayName, overlay: overlay)
+                    again = again || task.applyOverlay(name: overlayName, overlay: overlay)
                 }
                 for overlayName in requestedGlobalOverlays {
                     if task.appliedOverlays.contains(overlayName) { continue }
@@ -314,7 +314,7 @@ final public class Package {
                         }
                         continue
                     }
-                    again = again || task.applyOverlay(overlayName, overlay: overlay)
+                    again = again || task.applyOverlay(name: overlayName, overlay: overlay)
                     usedGlobalOverlays.append(overlayName)
                 }
             }
