@@ -167,7 +167,7 @@ class PackageTests: Test {
         try test.assert(c_default_qualified["name"]?.string == "c_default")
 
         //check package dependency graph
-        let _ = package.prunedDependencyGraph(a_default_unqualified)
+        let _ = package.prunedDependencyGraph(task: a_default_unqualified)
         
     }
 
@@ -195,7 +195,7 @@ class PackageTests: Test {
         try test.assert(c_default_qualified["name"]?.string == "c_default")
 
         //check package dependency graph
-        let _ = package.prunedDependencyGraph(a_default_unqualified)
+        let _ = package.prunedDependencyGraph(task: a_default_unqualified)
 
         //check each import path
         try test.assert(a_default_unqualified.importedPath == "./tests/collateral/import_paths/")

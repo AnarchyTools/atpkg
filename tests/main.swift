@@ -19,7 +19,7 @@ import Foundation
 extension String : ErrorProtocol {}
 
 enum test {
-    static func assert(condition: Bool, file: String = #file, functionName: String = #function, line: Int = #line) throws {
+    static func assert(_ condition: Bool, file: String = #file, functionName: String = #function, line: Int = #line) throws {
         if !condition {
             print(" \(file):\(line) \(functionName)  **FAILED**")
             throw "atpkg.tests.failed"

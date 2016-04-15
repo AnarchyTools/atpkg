@@ -24,14 +24,14 @@ class SubstitutionTests: Test {
     static func testBasic() throws {
         let filepath = "./tests/collateral/basic.atpkg"
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
-        try test.assert(evaluateSubstitutions("${test_substitution}", package: package) == "test_substitution")
-        try test.assert(evaluateSubstitutions("foobly-doobly-doo ${test_substitution} doobly-doo", package: package) == "foobly-doobly-doo test_substitution doobly-doo")
-        try test.assert(evaluateSubstitutions("foobly-doobly-doo \\${test_substitution} doobly-doo", package: package) == "foobly-doobly-doo ${test_substitution} doobly-doo")
+        try test.assert(evaluateSubstitutions(input: "${test_substitution}", package: package) == "test_substitution")
+        try test.assert(evaluateSubstitutions(input: "foobly-doobly-doo ${test_substitution} doobly-doo", package: package) == "foobly-doobly-doo test_substitution doobly-doo")
+        try test.assert(evaluateSubstitutions(input: "foobly-doobly-doo \\${test_substitution} doobly-doo", package: package) == "foobly-doobly-doo ${test_substitution} doobly-doo")
     }
 
     static func testCollectSources() throws {
         let filepath = "./tests/collateral/collect_sources/build.atpkg"
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
-        try test.assert(evaluateSubstitutions("${collect_sources:default}", package: package) == "./tests/collateral/collect_sources/src/a.swift ./tests/collateral/collect_sources/src/b.swift")
+        try test.assert(evaluateSubstitutions(input: "${collect_sources:default}", package: package) == "./tests/collateral/collect_sources/src/a.swift ./tests/collateral/collect_sources/src/b.swift")
     }
 }
