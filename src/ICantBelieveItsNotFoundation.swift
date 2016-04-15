@@ -51,26 +51,11 @@ extension NSString {
 // These parts of the "great swift renaming" are not yet implemented on Linux
 #if os(Linux)
 extension NSCharacterSet {
-    class func letter() -> NSCharacterSet {
+    class func letters() -> NSCharacterSet {
         return self.letterCharacterSet()
     }
-    class func whitespace() -> NSCharacterSet {
+    class func whitespaces() -> NSCharacterSet {
         return self.whitespaceCharacterSet()
-    }
-}
-
-extension NSFileManager {
-    func enumerator(atPath path: String) -> NSDirectoryEnumerator? {
-        return self.enumeratorAtPath(path)
-    }
-    func createDirectory(atPath path: String, withIntermediateDirectories createIntermediates: Bool,  attributes: [String : AnyObject]? = [:]) throws {
-        return try self.createDirectoryAtPath(path, withIntermediateDirectories: createIntermediates, attributes: attributes)
-    }
-    func attributesOfItem(atPath path: String) throws -> [String : Any] {
-        return try self.attributesOfItemAtPath(path)
-    }
-    func removeItem(atPath path: String) throws {
-        return try self.removeItemAtPath(path)
     }
 }
 
