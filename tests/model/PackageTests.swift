@@ -221,7 +221,8 @@ class PackageTests: Test {
     static func testRequireOverlays() throws {
         let filepath = "./tests/collateral/require_overlays.atpkg"
         do {
-            let _ = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+            let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+            try p.tasks["build"]?.checkRequiredOverlays()
             print("Overlays were not required")
             try test.assert(false)
         }

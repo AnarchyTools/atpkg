@@ -107,4 +107,28 @@ final public class Task {
             kvp[key] = newValue
         }
     }
+
+    ///Checks that the required overlays in the task are present. We
+    ///allow the parsing of a file that is missing some overlays since
+    ///those overlays may not be required for the present task.
+    public func checkRequiredOverlays() throws {
+            if let requiredOverlays_v = self["required-overlays"] {
+                guard let requiredOverlays = requiredOverlays_v.vector else {
+                    fatalError("Non-vector \(requiredOverlays_v)")
+                }
+                nextSet: for overlaySet_v in requiredOverlays {
+                    guard let overlaySet = overlaySet_v.vector else {
+                        fatalError("Non-vector \(overlaySet_v)")
+                    }
+                    for overlay_s in overlaySet {
+                        guard let overlay = overlay_s.string else {
+                            fatalError("Non-string \(overlay_s)")
+                        }
+                        if self.appliedOverlays.contains(overlay) { continue nextSet }
+                    }
+                    print("Task \(self.qualifiedName) requires at least one of \(overlaySet.map() {$0.string}) but it was not applied.  Applied overlays: \(self.appliedOverlays)")
+                    throw PackageError.RequiredOverlayNotPresent(overlaySet.map() {$0.string!})
+                }
+            }
+    }
 }
