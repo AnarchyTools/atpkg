@@ -129,7 +129,7 @@ final public class Package {
         return arr
     }
 
-    var adjustedImportPath: Path = Path(string: "")
+    var adjustedImportPath: Path = Path("")
 
     /**Calculate the pruned dependency graph for the given task
 - returns: A list of tasks in a reasonable order to be processed. */
@@ -208,9 +208,8 @@ final public class Package {
             }
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
-                let importedFile = Path(string: importFileString)
-                let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
-                let remotePackage = try Package(filepath: pathOnDisk.join(path: importedFile), overlay: requestedGlobalOverlays, focusOnTask: nil)
+                let adjustedImportPath = (pathOnDisk + importFileString).dirname()
+                let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -245,10 +244,9 @@ final public class Package {
                     let importFileString = "external/" + externalDep.name + "/build.atpkg"
 
                     // import the atbuild file if it is there
-                    let importedFile = Path(string: importFileString)
-                    let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
+                    let adjustedImportPath = (pathOnDisk + importFileString).dirname()
                     do {
-                        let remotePackage = try Package(filepath: pathOnDisk.join(path: importedFile), overlay: requestedGlobalOverlays, focusOnTask: nil)
+                        let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
                     } catch PackageError.ParserFailed {
