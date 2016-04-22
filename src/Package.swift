@@ -129,7 +129,7 @@ final public class Package {
         return arr
     }
 
-    var adjustedImportPath: Path = Path("")
+    var adjustedImportPath: Path = Path()
 
     /**Calculate the pruned dependency graph for the given task
 - returns: A list of tasks in a reasonable order to be processed. */

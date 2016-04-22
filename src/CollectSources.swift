@@ -21,7 +21,7 @@ import atfoundation
 public func collectSources(sourceDescriptions: [String], taskForCalculatingPath task: Task?) -> [Path] {
     var sources : [Path] = []
     for unPrefixedDescription in sourceDescriptions {
-        let description = (task?.importedPath ?? Path("")).appending(unPrefixedDescription)
+        let description = (task?.importedPath ?? Path()) + unPrefixedDescription
         if unPrefixedDescription.hasSuffix("**.swift") {
             let basepath = description.dirname()
             do {
