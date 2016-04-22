@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import atfoundation
+
 final public class Task {
     ///The unqualified name of the task, not including its package name
     public let unqualifiedName: String
@@ -26,15 +28,15 @@ final public class Task {
 
     public var dependencies: [String] = []
     public var tool: String
-    public var importedPath: String ///the directory at which the task was imported.  This includes a trailing /.
+    public var importedPath: Path /// the directory at which the task was imported
 
     var overlay: [String] = [] ///The overlays we should apply to this task
     internal(set) public var appliedOverlays: [String] = [] ///The overlays we did apply to this task
 
     var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
-    
+
     public var allKeys: [String]
-    
+
     private var kvp: [String:ParseValue]
 
     public enum Option: String {
@@ -53,10 +55,10 @@ final public class Task {
         }
     }
 
-    init?(value: ParseValue, unqualifiedName: String, package: Package, importedPath: String) {
+    init?(value: ParseValue, unqualifiedName: String, package: Package, importedPath: Path) {
         precondition(!unqualifiedName.characters.contains("."), "Task \(unqualifiedName) may not contain a period.")
         guard let kvp = value.map else { return nil }
-        self.importedPath = importedPath.pathWithTrailingSlash
+        self.importedPath = importedPath
         self.kvp = kvp
         self.unqualifiedName = unqualifiedName
         self.package = package
@@ -98,7 +100,7 @@ final public class Task {
             }
         }
     }
-    
+
     public subscript(key: String) -> ParseValue? {
         get {
             return kvp[key]

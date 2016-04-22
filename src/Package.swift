@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import Foundation
+
+import atfoundation
 
 enum PackageError: ErrorProtocol {
     case NonVectorImport
@@ -111,7 +112,7 @@ final public class Package {
     public var tasks: [String:Task] = [:]
     public var externals: [ExternalDependency] = []
 
-    public var importedPath: String
+    public var importedPath: Path
 
     ///Overlays that are a (direct) child of the receiver.  These are indexed by unqualified name.
     private var childOverlays: [String: [String: ParseValue]] = [:]
@@ -128,7 +129,7 @@ final public class Package {
         return arr
     }
 
-    var adjustedImportPath: String = ""
+    var adjustedImportPath: Path = Path(string: "")
 
     /**Calculate the pruned dependency graph for the given task
 - returns: A list of tasks in a reasonable order to be processed. */
@@ -155,13 +156,13 @@ final public class Package {
     - parameter overlay: A list of overlays to apply globally to all tasks in the package.
     - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
 */
-    public convenience init(filepath: String, overlay: [String], focusOnTask: String?) throws {
+    public convenience init(filepath: Path, overlay: [String], focusOnTask: String?) throws {
 
         //todo: why doesn't this throw?
-        guard let parser = Parser(filepath: filepath) else { throw PackageError.ParserFailed }
+        guard let parser = try Parser(filepath: filepath) else { throw PackageError.ParserFailed }
 
         let result = try parser.parse()
-        let basepath = filepath.toNSString.deletingLastPathComponent
+        let basepath = filepath.dirname()
         try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask)
     }
 
@@ -170,7 +171,7 @@ final public class Package {
     - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
     - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
     */
-    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: String, focusOnTask: String?) throws {
+    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: Path, focusOnTask: String?) throws {
         //warn on unknown keys
         for (k,_) in type.properties {
             if !Key.allKeys.map({$0.rawValue}).contains(k) {
@@ -179,7 +180,7 @@ final public class Package {
         }
 
         if type.name != "package" { throw PackageError.NonPackage }
-        self.importedPath = pathOnDisk.pathWithTrailingSlash
+        self.importedPath = pathOnDisk
 
         if let value = type.properties[Key.Name.rawValue]?.string { self.name = value }
         else {
@@ -205,9 +206,9 @@ final public class Package {
             }
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
-                let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.deletingLastPathComponent.pathWithTrailingSlash
-                let adjustedFileName = importFileString.toNSString.lastPathComponent
-                let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                let importedFile = Path(string: importFileString)
+                let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
+                let remotePackage = try Package(filepath: importedFile, overlay: requestedGlobalOverlays, focusOnTask: nil)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -242,10 +243,10 @@ final public class Package {
                     let importFileString = "external/" + externalDep.name + "/build.atpkg"
 
                     // import the atbuild file if it is there
-                    let adjustedImportPath = (pathOnDisk.pathWithTrailingSlash + importFileString).toNSString.deletingLastPathComponent.pathWithTrailingSlash
-                    let adjustedFileName = importFileString.toNSString.lastPathComponent
+                    let importedFile = Path(string: importFileString)
+                    let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
                     do {
-                        let remotePackage = try Package(filepath: adjustedImportPath + adjustedFileName, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                        let remotePackage = try Package(filepath: importedFile, overlay: requestedGlobalOverlays, focusOnTask: nil)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
                     } catch PackageError.ParserFailed {

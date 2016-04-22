@@ -26,7 +26,7 @@ private func evaluateSubstitution(substitution: String, package: Package) -> Str
         let collectedSources = collectSources(sourceDescriptions: str_sources, taskForCalculatingPath: task)
         var output = ""
         for (idx, source) in collectedSources.enumerated() {
-            output += source
+            output += source.description
             if idx != collectedSources.count - 1 { output += " "}
         }
         return output

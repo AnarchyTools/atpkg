@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import atfoundation
 import atpkg
+
 class SubstitutionTests: Test {
     required init() {}
     let tests = [
@@ -20,9 +23,9 @@ class SubstitutionTests: Test {
     ]
 
     let filename = #file
-        
+
     static func testBasic() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
+        let filepath = Path(string: "tests/collateral/basic.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         try test.assert(evaluateSubstitutions(input: "${test_substitution}", package: package) == "test_substitution")
         try test.assert(evaluateSubstitutions(input: "foobly-doobly-doo ${test_substitution} doobly-doo", package: package) == "foobly-doobly-doo test_substitution doobly-doo")
@@ -30,8 +33,8 @@ class SubstitutionTests: Test {
     }
 
     static func testCollectSources() throws {
-        let filepath = "./tests/collateral/collect_sources/build.atpkg"
+        let filepath = Path(string: "tests/collateral/collect_sources/build.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
-        try test.assert(evaluateSubstitutions(input: "${collect_sources:default}", package: package) == "./tests/collateral/collect_sources/src/a.swift ./tests/collateral/collect_sources/src/b.swift")
+        try test.assert(evaluateSubstitutions(input: "${collect_sources:default}", package: package) == "tests/collateral/collect_sources/src/a.swift tests/collateral/collect_sources/src/b.swift")
     }
 }

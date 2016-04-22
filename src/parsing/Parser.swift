@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+import atfoundation
 
 public enum ParseError: ErrorProtocol {
     case InvalidPackageFile
@@ -25,7 +25,7 @@ public enum ParseValue {
     case IntegerLiteral(Int)
     case FloatLiteral(Double)
     case BoolLiteral(Bool)
-    
+
     case Map([String:ParseValue])
     case Vector([ParseValue])
 }
@@ -35,7 +35,7 @@ extension ParseValue {
         if case let .StringLiteral(value) = self { return value }
         return nil
     }
-    
+
     public var integer: Int? {
         if case let .IntegerLiteral(value) = self { return value }
         return nil
@@ -50,12 +50,12 @@ extension ParseValue {
         if case let .BoolLiteral(value) = self { return value }
         return nil
     }
-    
+
     public var map: [String:ParseValue]? {
         if case let .Map(value) = self { return value }
         return nil
     }
-    
+
     public var vector: [ParseValue]? {
         if case let .Vector(value) = self { return value }
         return nil
@@ -70,7 +70,7 @@ final public class ParseType {
 
 final public class Parser {
     let lexer: Lexer
-    
+
     private func next() -> Token? {
         while true {
             guard let token = lexer.next() else { return nil }
@@ -79,19 +79,19 @@ final public class Parser {
             }
         }
     }
-    
-    public init?(filepath: String) {
-        guard let content = try? NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding) else {
+
+    public init?(filepath: Path) throws {
+        guard let content = try String(loadFromFile: filepath) else {
             return nil
         }
-        
-        let scanner = Scanner(content: content.toString)
+
+        let scanner = Scanner(content: content)
         self.lexer = Lexer(scanner: scanner)
     }
-    
+
     public func parse() throws -> ParseType {
         guard let token = next() else { throw ParseError.InvalidPackageFile }
-        
+
         if token.type == .OpenParen {
             return try parseType()
         }
@@ -99,48 +99,48 @@ final public class Parser {
             throw ParseError.ExpectedTokenType(.OpenParen, token)
         }
     }
-    
+
     private func parseType() throws -> ParseType {
         let type = ParseType()
         type.name = try parseIdentifier()
-        
+
         type.properties = try parseKeyValuePairs()
         return type
     }
-    
+
     private func parseKeyValuePairs() throws -> [String:ParseValue] {
         var pairs: [String:ParseValue] = [:]
 
         while let token = next() where token.type != .CloseParen && token.type != .CloseBrace {
             lexer.stall()
-            
+
             let key = try parseKey()
             let value = try parseValue()
-            
+
             pairs[key] = value
         }
         lexer.stall()
 
         return pairs
     }
-    
+
     private func parseKey() throws -> String {
         let colon = next()
         if colon?.type != .Colon { throw ParseError.ExpectedTokenType(.Colon, lexer.peek()) }
-        
+
         return try parseIdentifier()
     }
-    
+
     private func parseIdentifier() throws -> String {
         guard let identifier = next() else { throw ParseError.ExpectedTokenType(.Identifier, lexer.peek()) }
         if identifier.type != .Identifier { throw ParseError.ExpectedTokenType(.Identifier, lexer.peek()) }
-        
+
         return identifier.value
     }
-    
+
     private func parseValue() throws -> ParseValue {
         guard let token = next() else { throw ParseError.InvalidTokenForValueType(nil) }
-        
+
         switch token.type {
         case .OpenBrace: lexer.stall(); return try parseMap()
         case .OpenBracket: lexer.stall(); return try parseVector()
@@ -150,11 +150,11 @@ final public class Parser {
         default: throw ParseError.InvalidTokenForValueType(token)
         }
     }
-    
+
     private func parseVector() throws -> ParseValue {
         if let token = next() where token.type != .OpenBracket { throw ParseError.ExpectedTokenType(.OpenBracket, token) }
         var items: [ParseValue] = []
-        
+
         while let token = next() where token.type != .CloseBracket {
             lexer.stall()
             items.append(try parseValue())
@@ -165,12 +165,12 @@ final public class Parser {
 
         return .Vector(items)
     }
-    
+
     private func parseMap() throws -> ParseValue {
         if let token = next() where token.type != .OpenBrace { throw ParseError.ExpectedTokenType(.OpenBrace, token) }
         let items = try parseKeyValuePairs()
         if let token = next() where token.type != .CloseBrace { throw ParseError.ExpectedTokenType(.CloseBrace, token) }
-        
+
         return .Map(items)
     }
 }
