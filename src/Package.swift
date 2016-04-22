@@ -159,7 +159,9 @@ final public class Package {
     public convenience init(filepath: Path, overlay: [String], focusOnTask: String?) throws {
 
         //todo: why doesn't this throw?
-        guard let parser = try Parser(filepath: filepath) else { throw PackageError.ParserFailed }
+        guard let parser = try Parser(filepath: filepath) else {
+            throw PackageError.ParserFailed
+        }
 
         let result = try parser.parse()
         let basepath = filepath.dirname()
@@ -208,7 +210,7 @@ final public class Package {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let importedFile = Path(string: importFileString)
                 let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
-                let remotePackage = try Package(filepath: importedFile, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                let remotePackage = try Package(filepath: pathOnDisk.join(path: importedFile), overlay: requestedGlobalOverlays, focusOnTask: nil)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -246,7 +248,7 @@ final public class Package {
                     let importedFile = Path(string: importFileString)
                     let adjustedImportPath = pathOnDisk.join(path: importedFile).dirname()
                     do {
-                        let remotePackage = try Package(filepath: importedFile, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                        let remotePackage = try Package(filepath: pathOnDisk.join(path: importedFile), overlay: requestedGlobalOverlays, focusOnTask: nil)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
                     } catch PackageError.ParserFailed {
