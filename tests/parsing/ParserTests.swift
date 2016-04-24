@@ -25,7 +25,7 @@ class ParserTests: Test {
     let filename = #file
 
     static func testBasic() throws {
-        let filepath = Path(string: "tests/collateral/basic.atpkg")
+        let filepath = Path("tests/collateral/basic.atpkg")
         guard let parser = try Parser(filepath: filepath) else {
             try test.assert(false); return
         }
