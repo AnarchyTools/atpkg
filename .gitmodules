@@ -1,0 +1,3 @@
+[submodule "atfoundation"]
+	path = atfoundation
+	url = https://github.com/AnarchyTools/atfoundation.git

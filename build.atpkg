@@ -15,13 +15,17 @@
 
 (package
   :name "atpkg"
-  
+  :import-packages ["atfoundation/build.atpkg"]
+
   :tasks {
     :atpkg {
       :tool "atllbuild"
       :sources ["src/**.swift"]
       :name "atpkg"
       :output-type "static-library"
+      :link-with ["atfoundation.a"]
+      :dependencies ["atfoundation.atfoundation"]
+
       :publish-product true
       :overlays {
         :bootstrap-osx {
@@ -39,11 +43,11 @@
 
     :atpkg-tests {
       :tool "atllbuild"
-      :dependencies ["atpkg"]
+      :dependencies ["atpkg" "atfoundation.atfoundation"]
       :sources ["tests/**.swift"]
       :name "atpkgtests"
       :output-type "executable"
-      :link-with ["atpkg.a"]
+      :link-with ["atpkg.a" "atfoundation.a"]
       :publish-product true
     }
 

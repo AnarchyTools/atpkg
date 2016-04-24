@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-import Foundation
+import atfoundation
 import atpkg
 
 class ParserTests: Test {
@@ -23,19 +23,19 @@ class ParserTests: Test {
     ]
 
     let filename = #file
-    
+
     static func testBasic() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
-        guard let parser = Parser(filepath: filepath) else {
+        let filepath = Path("tests/collateral/basic.atpkg")
+        guard let parser = try Parser(filepath: filepath) else {
             try test.assert(false); return
         }
-        
+
         let result = try parser.parse()
-        
+
         let name = result.properties["name"]
         try test.assert(name != nil)
         try test.assert(name?.string == "basic")
-        
+
         let version = result.properties["version"]
         try test.assert(version != nil)
         try test.assert(version?.string == "0.1.0-dev")

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-import Foundation
+import atfoundation
 import atpkg
 
 func outputBaseline(scanner: Scanner) {
@@ -29,7 +29,7 @@ func outputBaseline(scanner: Scanner) {
         case "\"": str = "\\\""
         default: break
         }
-        
+
         print("try test.assert(scanner.next()?.character == \"\(str)\")")
     }
     print("--- end baseline ---")
@@ -44,11 +44,11 @@ class ScannerTests: Test {
     let filename = #file
 
     static func testBasicClj() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
-        
-        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding).toString
+        let filepath = Path("tests/collateral/basic.atpkg")
+
+        let content: String = try String(loadFromFile: filepath)!
         let scanner = Scanner(content: content)
-        
+
         try test.assert(scanner.next()?.character == ";")
         try test.assert(scanner.next()?.character == ";")
         try test.assert(scanner.next()?.character == " ")

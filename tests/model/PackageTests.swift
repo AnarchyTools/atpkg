@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-import Foundation
+import atfoundation
 import atpkg
 
 class PackageTests: Test {
@@ -32,17 +32,17 @@ class PackageTests: Test {
     ]
 
     let filename = #file
-    
-    static func testBasic() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
 
-        guard let parser = Parser(filepath: filepath) else {
+    static func testBasic() throws {
+        let filepath = Path("tests/collateral/basic.atpkg")
+
+        guard let parser = try Parser(filepath: filepath) else {
             try test.assert(false); return
         }
-        
+
         let result = try parser.parse()
-        let package = try Package(type: result, overlay: [], pathOnDisk: "./tests/collateral", focusOnTask: nil)
-        
+        let package = try Package(type: result, overlay: [], pathOnDisk: Path("tests/collateral"), focusOnTask: nil)
+
         try test.assert(package.name == "basic")
         try test.assert(package.version == "0.1.0-dev")
         try test.assert(package.tasks.count == 2) //indexed twice, by qualified and unqualified name
@@ -58,15 +58,15 @@ class PackageTests: Test {
     }
 
     static func testImport() throws {
-        let filepath = "./tests/collateral/import_src.atpkg"
+        let filepath = Path("tests/collateral/import_src.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
 
         try test.assert(package.tasks["import_dst.build"] != nil)
-        try test.assert(package.tasks["import_dst.build"]!.importedPath == "./tests/collateral/")
+        try test.assert(package.tasks["import_dst.build"]!.importedPath.description == "tests/collateral")
     }
 
     static func testOverlays() throws {
-        let filepath = "./tests/collateral/overlays.atpkg"
+        let filepath = Path("tests/collateral/overlays.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         guard let compileOptions = package.tasks["build"]?["compile-options"]?.vector else {
             fatalError("No compile options?")
@@ -127,7 +127,7 @@ class PackageTests: Test {
     }
 
     static func testExportedOverlays() throws {
-        let filepath = "./tests/collateral/overlays_src.atpkg"
+        let filepath = Path("tests/collateral/overlays_src.atpkg")
 
         let package2 = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         guard let compileOptions2 = package2.tasks["build"]?["compile-options"]?.vector else {
@@ -144,7 +144,7 @@ class PackageTests: Test {
     }
 
     static func testChainedImports () throws {
-        let filepath = "./tests/collateral/chained_imports/a.atpkg"
+        let filepath = Path("tests/collateral/chained_imports/a.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         guard let a_default_unqualified = package.tasks["default"] else {
             fatalError("No default task")
@@ -168,11 +168,11 @@ class PackageTests: Test {
 
         //check package dependency graph
         let _ = package.prunedDependencyGraph(task: a_default_unqualified)
-        
+
     }
 
     static func testImportPaths () throws {
-        let filepath = "./tests/collateral/import_paths/a.atpkg"
+        let filepath = Path("tests/collateral/import_paths/a.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         guard let a_default_unqualified = package.tasks["default"] else {
             fatalError("No default task")
@@ -198,14 +198,14 @@ class PackageTests: Test {
         let _ = package.prunedDependencyGraph(task: a_default_unqualified)
 
         //check each import path
-        try test.assert(a_default_unqualified.importedPath == "./tests/collateral/import_paths/")
-        try test.assert(a_default_qualified.importedPath == "./tests/collateral/import_paths/")
-        try test.assert(b_default_qualified.importedPath == "./tests/collateral/import_paths/b/")
-        try test.assert(c_default_qualified.importedPath == "./tests/collateral/import_paths/b/c/")
+        try test.assert(a_default_unqualified.importedPath.description == "tests/collateral/import_paths")
+        try test.assert(a_default_qualified.importedPath.description == "tests/collateral/import_paths")
+        try test.assert(b_default_qualified.importedPath.description == "tests/collateral/import_paths/b")
+        try test.assert(c_default_qualified.importedPath.description == "tests/collateral/import_paths/b/c")
     }
 
     static func testChainedImportOverlays() throws {
-        let filepath = "./tests/collateral/chained_import_overlays/a.atpkg"
+        let filepath = Path("tests/collateral/chained_import_overlays/a.atpkg")
         let package = try Package(filepath: filepath, overlay: ["b.foo"], focusOnTask: nil)
         guard let a_qualified = package.tasks["a.default"] else { print("error"); try test.assert(false); return }
         guard let options = a_qualified["compile-options"]?.vector else {
@@ -219,7 +219,7 @@ class PackageTests: Test {
     }
 
     static func testRequireOverlays() throws {
-        let filepath = "./tests/collateral/require_overlays.atpkg"
+        let filepath = Path("tests/collateral/require_overlays.atpkg")
         do {
             let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
             try p.tasks["build"]?.checkRequiredOverlays()
@@ -229,7 +229,7 @@ class PackageTests: Test {
         catch {}
 
         do {
-            let _ = try Package(filepath: filepath, overlay: ["osx"], focusOnTask: nil) 
+            let _ = try Package(filepath: filepath, overlay: ["osx"], focusOnTask: nil)
         }
         catch {
             print("Overlays were provided")
@@ -239,7 +239,7 @@ class PackageTests: Test {
     }
 
     static func nonVectorImport() throws {
-        let filepath = "./tests/collateral/non_vector_import.atpkg"
+        let filepath = Path("tests/collateral/non_vector_import.atpkg")
         if let _ = try? Package(filepath: filepath, overlay: [], focusOnTask: nil) {
             try test.assert(false) //no diagnostic
         }

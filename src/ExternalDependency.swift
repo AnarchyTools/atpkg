@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import atfoundation
+
 final public class ExternalDependency {
     public enum VersioningMethod {
         case Version([String])
@@ -20,34 +22,37 @@ final public class ExternalDependency {
         case Tag(String)
     }
 
-    public var gitURL: String
+    public var gitURL: URL
     public var version: VersioningMethod
 
     public var name: String {
-        let lastComponent = gitURL.toNSString.lastPathComponent
-        if lastComponent.hasSuffix(".git") {
-            return lastComponent.toNSString.substring(to: lastComponent.characters.count - 4)
+        if let lastComponent = gitURL.path.components.last {
+            if lastComponent.hasSuffix(".git") {
+                return lastComponent.subString(toIndex: lastComponent.endIndex.advanced(by: -4))
+            }
+            return lastComponent
+        } else {
+            return "unknown"
         }
-        return lastComponent
     }
 
     init?(url: String, version: [String]) {
-        self.gitURL = url
+        self.gitURL = URL(string: url)
         self.version = .Version(version)
     }
 
     init?(url: String, commit: String) {
-        self.gitURL = url
+        self.gitURL = URL(string: url)
         self.version = .Commit(commit)
     }
 
     init?(url: String, branch: String) {
-        self.gitURL = url
+        self.gitURL = URL(string: url)
         self.version = .Branch(branch)
     }
 
     init?(url: String, tag: String) {
-        self.gitURL = url
+        self.gitURL = URL(string: url)
         self.version = .Tag(tag)
     }
 }

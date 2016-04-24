@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // NOTE: This is the crappiest test thing ever... but it works for now.
-import Foundation
+import atfoundation
 
 
 extension String : ErrorProtocol {}

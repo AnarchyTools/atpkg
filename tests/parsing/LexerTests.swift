@@ -13,26 +13,26 @@
 // limitations under the License.
 
 
-import Foundation
+import atfoundation
 import atpkg
 
 func outputBaseline(lexer: Lexer) {
     print("--- baseline ---")
     while let token = lexer.next() {
-        let type = String(reflecting: token.type).replacingOccurrences(of: "atpkgparser.", with: "")
+        let type = String(reflecting: token.type).replacing(searchTerm: "atpkgparser.", replacement: "")
         var value = ""
-        
+
         switch token.type {
         case .Terminal: value = "\\n"
         default: value = token.value
         }
-        
+
         let output = "try test.assert(lexer.next() == Token(type: \(type), value: \"\(value)\", line: \(token.line), column: \(token.column)))"
         print(output)
     }
     print("--- end baseline ---")
 }
-    
+
 class LexerTests: Test {
     required init() {}
     let tests = [
@@ -40,14 +40,14 @@ class LexerTests: Test {
     ]
 
     let filename = #file
-        
-    static func testBasic() throws {
-        let filepath = "./tests/collateral/basic.atpkg"
 
-        let content: String = try NSString(contentsOfFile: filepath, encoding: NSUTF8StringEncoding).toString
+    static func testBasic() throws {
+        let filepath = Path("tests/collateral/basic.atpkg")
+
+        let content: String = try String(loadFromFile: filepath)!
         let scanner = Scanner(content: content)
         let lexer = Lexer(scanner: scanner)
-        
+
         try test.assert(lexer.next() == Token(type: atpkg.TokenType.Comment, value: " This is the most basic of sample files.", line: 1, column: 1))
         try test.assert(lexer.next() == Token(type: atpkg.TokenType.Terminal, value: "\n", line: 2, column: 1))
         try test.assert(lexer.next() == Token(type: atpkg.TokenType.OpenParen, value: "(", line: 3, column: 1))

@@ -19,7 +19,7 @@ public struct ScannerInfo {
 }
 
 final public class Scanner {
-    
+
     var content: String
     var index: String.Index
     var current: ScannerInfo? = nil
@@ -27,7 +27,7 @@ final public class Scanner {
     private var shouldStall = false
 
     var line: Int = 1
-    var column: Int = 1 
+    var column: Int = 1
 
     public init(content: String) {
         self.content = content
@@ -52,9 +52,9 @@ final public class Scanner {
             shouldStall = false
             return current
         }
-        
+
         if index == content.endIndex {
-            current = nil 
+            current = nil
         }
         else {
             current = ScannerInfo(character: content[index], line: line, column: column)
@@ -62,14 +62,14 @@ final public class Scanner {
 
             if current?.character == "\n" {
                 line += 1
-                column = 1 
+                column = 1
             }
             else {
                 column += 1
             }
         }
 
-        return current 
+        return current
     }
 
     public func peek() -> ScannerInfo? {

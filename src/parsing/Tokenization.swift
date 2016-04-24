@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+import atfoundation
 
 public enum TokenType {
     case Identifier
@@ -52,27 +52,25 @@ public struct Token: Equatable {
     }
 }
 
-func isCharacterPartOfSet(c: Character?, set: NSCharacterSet) -> Bool {
-    guard let c = c else { return false }
-    var isMember = true
-
-    for utf16Component in String(c).utf16 {
-        if !set.characterIsMember(utf16Component) { isMember = false; break }
-    }
-
-    return isMember
-}
-
 func isValidIdentifierSignalCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c: c, set: NSCharacterSet.letters())
+    guard let c = c else {
+        return false
+    }
+    return Charset.isLetter(character: c)
 }
 
 func isValidIdenitifierCharacter(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c: c, set: NSCharacterSet.letters()) || c == "-" || c == "." || c == "/"
+    guard let c = c else {
+        return false
+    }
+    return Charset.isLetter(character: c) || c == "-" || c == "." || c == "/"
 }
 
 func isWhitespace(c: Character?) -> Bool {
-    return isCharacterPartOfSet(c: c, set: NSCharacterSet.whitespaces())
+    guard let c = c else {
+        return false
+    }
+    return Charset.isWhitespace(character: c)
 }
 
 final public class Lexer {
