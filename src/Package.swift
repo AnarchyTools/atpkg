@@ -328,7 +328,9 @@ final public class Package {
         //warn about unused global overlays
         for requestedOverlay in requestedGlobalOverlays {
             if !usedGlobalOverlays.contains(requestedOverlay) {
-                print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
+                if !requestedOverlay.hasPrefix("atbuild.") {
+                    print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
+                }
             }
         }
 
