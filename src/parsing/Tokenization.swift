@@ -149,7 +149,26 @@ final public class Lexer {
             else if next.character == "\"" {
                 var content = ""
                 while let info = scanner.next() where info.character != "\"" {
-                    content.append(info.character!)
+                    if info.character == "\\" {
+                        let escaped = scanner.next()
+                        let char = escaped?.character
+                        
+                        switch escaped?.character {
+                        case _ where char == "t": content.append("\t"); break
+                        case _ where char == "b": fatalError("Unsupported escape sequence: \\b")
+                        case _ where char == "n": content.append("\n"); break
+                        case _ where char == "r": content.append("\r"); break
+                        case _ where char == "f": fatalError("Unsupported escape sequence: \\f")
+                        case _ where char == "'": content.append("'"); break
+                        case _ where char == "\"": content.append("\""); break
+                        case _ where char == "\\": content.append("\\"); break
+                        default:
+                            fatalError("Unsupposed escape sequence: \\\(escaped?.character)")
+                        }
+                    }
+                    else {
+                        content.append(info.character!)
+                    }
                 }
 
                 return Token(type: .StringLiteral, value: content, line: next.line, column: next.column)

@@ -19,7 +19,8 @@ import atpkg
 class ParserTests: Test {
     required init() {}
     let tests = [
-        ParserTests.testBasic
+        ParserTests.testBasic,
+        ParserTests.testEscape
     ]
 
     let filename = #file
@@ -53,6 +54,51 @@ class ParserTests: Test {
         let buildName = build?.map?["name"]
         try test.assert(buildName != nil)
         try test.assert(buildName?.string == "json-swift")
+
+        let outputType = build?.map?["output-type"]
+        try test.assert(outputType != nil)
+        try test.assert(outputType?.string == "lib")
+
+        let source = build?.map?["sources"]
+        try test.assert(source != nil)
+        try test.assert(source?.vector != nil)
+        try test.assert(source?.vector?[0].string == "src/**.swift")
+        try test.assert(source?.vector?[1].string == "lib/**.swift")
+    }
+    
+    static func testEscape() throws {
+        let filepath = Path("tests/collateral/escape.atpkg")
+        guard let parser = try Parser(filepath: filepath) else {
+            try test.assert(false); return
+        }
+
+        let result = try parser.parse()
+
+        let name = result.properties["name"]
+        try test.assert(name != nil)
+        try test.assert(name?.string == "basic")
+
+        let version = result.properties["version"]
+        try test.assert(version != nil)
+        try test.assert(version?.string == "0.1.0-dev")
+
+        let tasks = result.properties["tasks"]
+        try test.assert(tasks != nil)
+
+        let build = tasks?.map?["build"]
+        try test.assert(build != nil)
+
+        let tool = build?.map?["tool"]
+        try test.assert(tool != nil)
+        try test.assert(tool?.string == "lldb-build")
+
+        let buildName = build?.map?["name"]
+        try test.assert(buildName != nil)
+        try test.assert(buildName?.string == "json-swift")
+        
+        let description = build?.map?["description"]
+        try test.assert(description != nil)
+        try test.assert(description?.string == "This the \"the\" most important thing.\n\tDon\'t you think so?")
 
         let outputType = build?.map?["output-type"]
         try test.assert(outputType != nil)
