@@ -9,7 +9,7 @@ private func evaluateSubstitution(substitution: String, package: Package) -> Str
     //"prefix-like" substitions here
     //collect sources substition
     if substitution.hasPrefix("collect_sources:") {
-        let taskName = String(substitution.characters[substitution.characters.startIndex.advanced(by: 16)..<substitution.characters.endIndex])
+        let taskName = String(substitution.characters[substitution.characters.index(substitution.characters.startIndex, offsetBy: 16)..<substitution.characters.endIndex])
         guard let task = package.tasks[taskName] else {
             fatalError("Cannot find task named \(taskName) for substition.")
         }
