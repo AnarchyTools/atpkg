@@ -19,7 +19,8 @@ class SubstitutionTests: Test {
     required init() {}
     let tests = [
         SubstitutionTests.testBasic,
-        SubstitutionTests.testCollectSources
+        SubstitutionTests.testCollectSources,
+        SubstitutionTests.testEscapedValue
     ]
 
     let filename = #file
@@ -36,5 +37,11 @@ class SubstitutionTests: Test {
         let filepath = Path("tests/collateral/collect_sources/build.atpkg")
         let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         try test.assert(evaluateSubstitutions(input: "${collect_sources:default}", package: package) == "tests/collateral/collect_sources/src/a.swift tests/collateral/collect_sources/src/b.swift")
+    }
+
+    static func testEscapedValue() throws {
+        let filepath = Path("tests/collateral/escape.atpkg")
+        let package = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+        try test.assert(evaluateSubstitutions(input: "\\${ATBUILD_USER_PATH}", package: package) == "${ATBUILD_USER_PATH}")
     }
 }

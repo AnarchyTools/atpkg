@@ -162,6 +162,7 @@ final public class Lexer {
                         case _ where char == "'": content.append("'"); break
                         case _ where char == "\"": content.append("\""); break
                         case _ where char == "\\": content.append("\\"); break
+                        case _ where char == "$": content.append("\\$"); break
                         default:
                             fatalError("Unsupposed escape sequence: \\\(escaped?.character)")
                         }

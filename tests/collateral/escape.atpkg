@@ -12,6 +12,12 @@
       :output-type "lib" 
       :sources ["src/**.swift" "lib/**.swift"]
     }
+    
+    :check {
+      :tool "shell"
+      :name "shell-escape"
+      :script "echo path:\${ATBUILD_USER_PATH}xx"
+    }
   }
 )
 
