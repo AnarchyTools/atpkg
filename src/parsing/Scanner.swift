@@ -58,7 +58,7 @@ final public class Scanner {
         }
         else {
             current = ScannerInfo(character: content[index], line: line, column: column)
-            index = index.successor()
+            index = content.index(after: index)
 
             if current?.character == "\n" {
                 line += 1
