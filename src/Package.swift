@@ -249,8 +249,8 @@ final public class Package {
                         let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
                         remotePackage.adjustedImportPath = adjustedImportPath
                         remotePackages.append(remotePackage)
-                    } catch PackageError.ParserFailed {
-                        print("Unsatisfied external dependency: \(externalDep.name), run atpm fetch")
+                    } catch {
+                        print("Unsatisfied external dependency: \(externalDep.name) (Error: \(error)), run atpm fetch")
                     }
                 } else {
                     fatalError("Could not parse external dependency declaration for \(url)")
