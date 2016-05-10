@@ -27,7 +27,8 @@ class PackageTests: Test {
         PackageTests.testImportPaths,
         PackageTests.testChainedImportOverlays,
         PackageTests.nonVectorImport,
-        PackageTests.testRequireOverlays
+        PackageTests.testRequireOverlays,
+        PackageTests.testOnlyPlatforms
 
     ]
 
@@ -243,5 +244,13 @@ class PackageTests: Test {
         if let _ = try? Package(filepath: filepath, overlay: [], focusOnTask: nil) {
             try test.assert(false) //no diagnostic
         }
+    }
+
+    static func testOnlyPlatforms() throws {
+        let filepath = Path("tests/collateral/only-platforms.atpkg")
+
+        let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+        guard let task = p.tasks["build"] else { fatalError("No build task")}
+        try test.assert(task.onlyPlatforms == ["linux","osx"])
     }
 }
