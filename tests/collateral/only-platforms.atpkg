@@ -1,0 +1,18 @@
+;; This is the most basic of sample files.
+
+(package
+  :name "basic"
+  :version "0.1.0-dev"
+  
+  :tasks {
+    :build {
+      :tool "lldb-build"
+      :name "json-swift"
+      :output-type "lib" 
+      :sources ["src/**.swift" "lib/**.swift"]
+      :only-platforms ["linux" "osx"]
+    }
+  }
+)
+
+; End of the sample.

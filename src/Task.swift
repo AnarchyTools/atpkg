@@ -39,18 +39,22 @@ final public class Task {
 
     private var kvp: [String:ParseValue]
 
+    public var onlyPlatforms: [String] = []
+
     public enum Option: String {
         case Tool = "tool"
         case UseOverlays = "use-overlays"
         case Overlays = "overlays"
         case Dependencies = "dependencies"
+        case OnlyPlatforms = "only-platforms"
 
         public static var allOptions: [Option] {
             return [
                     Tool,
                     UseOverlays,
                     Overlays,
-                    Dependencies
+                    Dependencies,
+                    OnlyPlatforms
             ]
         }
     }
@@ -97,6 +101,14 @@ final public class Task {
         if let values = kvp[Option.Dependencies.rawValue]?.vector {
             for value in values {
                 if let dep = value.string { self.dependencies.append(dep) }
+            }
+        }
+
+        if let onlyPlatforms = kvp[Option.OnlyPlatforms.rawValue] {
+            guard let o = onlyPlatforms.vector else { fatalError("Non-vector \(Option.OnlyPlatforms.rawValue) \(onlyPlatforms)")}
+            for o in o {
+                guard case .StringLiteral(let platform) = o else { fatalError("Non-string \(Option.OnlyPlatforms.rawValue) \(o)")}
+                self.onlyPlatforms.append(platform)
             }
         }
     }
