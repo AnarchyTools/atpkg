@@ -104,7 +104,7 @@ final public class Package {
     public var name: String
 
     // The optional properties. All optional properties must have a default value.
-    public var version: String = ""
+    public var version: String? = nil
 
     /**The tasks for the package.  For tasks in this package, they are indexed
     both by qualified and unqualified name.  For tasks in another package, they
