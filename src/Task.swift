@@ -35,7 +35,9 @@ final public class Task {
 
     var declaredOverlays: [String: [String: ParseValue]] = [:] ///The overlays this task declares
 
-    public var allKeys: [String]
+    public var allKeys: [String] {
+        return [String](self.kvp.keys)
+    }
 
     private var kvp: [String:ParseValue]
 
@@ -66,7 +68,6 @@ final public class Task {
         self.kvp = kvp
         self.unqualifiedName = unqualifiedName
         self.package = package
-        self.allKeys = [String](kvp.keys)
 
         guard let tool = kvp[Option.Tool.rawValue]?.string else {
             self.tool = "invalid"
