@@ -1,0 +1,19 @@
+(package
+:name "DummyBinary"
+
+:binaries {
+    :channels {
+        :linux {
+            :1.0 {
+                :url "https://github.com/AnarchyTools/dummyBinaryPackage/releases/download/0.1/linux.tar.xz"
+            }
+        }
+        :osx {
+            :1.0 {
+                :url "https://github.com/AnarchyTools/dummyBinaryPackage/releases/download/0.1/osx.tar.xz"
+            }
+        }
+    }
+}
+
+)

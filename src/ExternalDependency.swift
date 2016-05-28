@@ -21,38 +21,67 @@ final public class ExternalDependency {
         case Branch(String)
         case Tag(String)
     }
+    public enum DependencyType {
+        case Git
+        case Manifest
+    }
 
-    public var gitURL: URL
+    public var url: URL
     public var version: VersioningMethod
+    public var channels: [String]?
 
-    public var name: String {
-        if let lastComponent = gitURL.path.components.last {
+    public var dependencyType: DependencyType
+
+    ///atpm sets this value when it parses the name from the manifest.
+    ///This value is then returned from `name` on request.
+    ///Therefore, we "learn" the value of a remote package name after parsing its manifest.
+    ///- warning: This API is particular to atpm, it is probably not useful unless you are working on that project
+    public var _parsedNameFromManifest: String? = nil
+
+    ///Custom info available for use by the application.
+    ///In practice, this is used to hold lock information for atpm
+    public var _applicationInfo: Any? = nil
+
+    ///The name of the dependency.
+    ///Note that if the dependency points to a manifest, the name is not known.
+    public var name: String? {
+        if self.dependencyType == .Manifest {
+            if let p = _parsedNameFromManifest { return p }
+            return nil
+        }
+        if let lastComponent = url.path.components.last {
             if lastComponent.hasSuffix(".git") {
                 return lastComponent.subString(toIndex: lastComponent.index(lastComponent.endIndex, offsetBy: -4))
             }
             return lastComponent
         } else {
-            return "unknown"
+            return nil
         }
     }
 
-    init?(url: String, version: [String]) {
-        self.gitURL = URL(string: url)
-        self.version = .Version(version)
+    private init?(url: String, versionMethod: VersioningMethod, channels: [String]?) {
+        self.url = URL(string: url)
+        self.version = versionMethod
+        self.channels = channels
+        if url.hasSuffix(".atpkg") {
+            self.dependencyType = .Manifest
+        }
+        else { self.dependencyType = .Git }
+        print("dependency type \(self.dependencyType)")
+    }
+    convenience init?(url: String, version: [String], channels: [String]?) {
+        self.init(url: url, versionMethod: .Version(version), channels: channels)
     }
 
-    init?(url: String, commit: String) {
-        self.gitURL = URL(string: url)
-        self.version = .Commit(commit)
+    convenience init?(url: String, commit: String, channels: [String]?) {
+        self.init(url: url, versionMethod: .Commit(commit), channels: channels)
     }
 
-    init?(url: String, branch: String) {
-        self.gitURL = URL(string: url)
-        self.version = .Branch(branch)
+    convenience init?(url: String, branch: String, channels: [String]?) {
+        self.init(url: url, versionMethod: .Branch(branch), channels: channels)
     }
 
-    init?(url: String, tag: String) {
-        self.gitURL = URL(string: url)
-        self.version = .Tag(tag)
+    convenience init?(url: String, tag: String, channels: [String]?) {
+        self.init(url: url, versionMethod: .Tag(tag), channels: channels)
     }
 }
