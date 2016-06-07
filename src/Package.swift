@@ -85,6 +85,7 @@ final public class Package {
         case Tasks = "tasks"
         case Overlays = "overlays"
         case UseOverlays = "use-overlays"
+        case Payload = "payload"
 
         static var allKeys: [Key] {
             return [
@@ -95,7 +96,8 @@ final public class Package {
                     ExternalPackages,
                     Tasks,
                     Overlays,
-                    UseOverlays
+                    UseOverlays,
+                    Payload
             ]
         }
     }
@@ -105,6 +107,9 @@ final public class Package {
 
     // The optional properties. All optional properties must have a default value.
     public var version: String? = nil
+
+    ///The binary payload, if the package is an atbin
+    public var payload: String? = nil
 
     /**The tasks for the package.  For tasks in this package, they are indexed
     both by qualified and unqualified name.  For tasks in another package, they
@@ -197,6 +202,10 @@ final public class Package {
                     self.tasks[task.qualifiedName] = task
                 }
             }
+        }
+
+        if let payload = type.properties[Key.Payload.rawValue]?.string {
+            self.payload = payload
         }
 
         var remotePackages: [Package] = []
