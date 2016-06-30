@@ -56,14 +56,14 @@ func isValidIdentifierSignalCharacter(c: Character?) -> Bool {
     guard let c = c else {
         return false
     }
-    return Charset.isLetter(character: c)
+    return Charset.isLetter(character: c) || Charset.isNumberDigit(character: c)
 }
 
 func isValidIdenitifierCharacter(c: Character?) -> Bool {
     guard let c = c else {
         return false
     }
-    return Charset.isLetter(character: c) || c == "-" || c == "." || c == "/"
+    return Charset.isLetter(character: c) || Charset.isNumberDigit(character: c) ||  c == "-" || c == "." || c == "/"
 }
 
 func isWhitespace(c: Character?) -> Bool {

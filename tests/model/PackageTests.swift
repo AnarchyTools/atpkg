@@ -28,7 +28,9 @@ class PackageTests: Test {
         PackageTests.testChainedImportOverlays,
         PackageTests.nonVectorImport,
         PackageTests.testRequireOverlays,
-        PackageTests.testOnlyPlatforms
+        PackageTests.testOnlyPlatforms,
+        PackageTests.testUseBinary,
+        PackageTests.testBinaryManifest,
 
     ]
 
@@ -252,5 +254,32 @@ class PackageTests: Test {
         let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
         guard let task = p.tasks["build"] else { fatalError("No build task")}
         try test.assert(task.onlyPlatforms == ["linux","osx"])
+    }
+
+    static func testUseBinary() throws {
+        let filepath = Path("tests/collateral/use-binary.atpkg")
+
+        let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+        let dep = p.externals[0]
+        guard let channels = dep.channels else { fatalError("No channels ")}
+        try test.assert(channels == ["osx"])
+    }
+
+    static func testBinaryManifest() throws {
+        let filepath = Path("tests/collateral/binary-manifest.atpkg")
+
+        let p = try Package(filepath: filepath, overlay: [], focusOnTask: nil)
+        try test.assert(p.binaryChannels?.count == 2)
+        guard let channels = p.binaryChannels else {fatalError("No channels")}
+        for channel in channels {
+            try test.assert(channel.versions.count == 1)
+            if channel.name == "linux" {
+                try test.assert(channel.versions[0].url == URL(string: "https://github.com/AnarchyTools/dummyBinaryPackage/releases/download/0.1/linux.tar.xz"))
+            }
+            else {
+                try test.assert(channel.versions[0].url == URL(string: "https://github.com/AnarchyTools/dummyBinaryPackage/releases/download/0.1/osx.tar.xz"))
+            }
+        }
+        
     }
 }

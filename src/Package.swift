@@ -86,6 +86,8 @@ final public class Package {
         case Overlays = "overlays"
         case UseOverlays = "use-overlays"
         case Payload = "payload"
+        case Binaries = "binaries"
+        case BinaryChannels = "channels"
 
         static var allKeys: [Key] {
             return [
@@ -97,7 +99,9 @@ final public class Package {
                     Tasks,
                     Overlays,
                     UseOverlays,
-                    Payload
+                    Binaries,
+                    BinaryChannels,
+					Payload
             ]
         }
     }
@@ -124,6 +128,8 @@ final public class Package {
 
     ///Overlays that are an (indirect) child of the receiver.  these are indexed by qualified name.
     private var importedOverlays: [String: [String: ParseValue]] = [:]
+
+    public var binaryChannels : [BinaryChannel]?
 
     ///The union of childOverlays and importedOverlays
     var overlays : [String: [String: ParseValue]] {
@@ -229,6 +235,17 @@ final public class Package {
             for dep in externalDeps {
                 guard let d = dep.map else { fatalError("Non-Map external dependency declaration") }
                 guard let url = d["url"]?.string else { fatalError("No URL in dependency declaration") }
+                let channels: [String]?
+                if let c = d["channels"] {
+                    var channels_ : [String] = []
+                    guard case .Vector(let v) = c else { fatalError("Non-vector channel specification")}
+                    for cs in v {
+                        guard case .StringLiteral(let s) = cs else { fatalError("Non-string channel specifier \(cs)")}
+                        channels_.append(s)
+                    }
+                    channels = channels_
+                }
+                else { channels = nil }
                 var externalDep: ExternalDependency? = nil
                 if let version = d["version"]?.vector {
                     var versionDecl = [String]()
@@ -239,28 +256,37 @@ final public class Package {
                             fatalError("Could not parse external dependency version declaration for \(url)")
                         }
                     }
-                    externalDep = ExternalDependency(url: url, version: versionDecl)
+                    externalDep = ExternalDependency(url: url, version: versionDecl, channels: channels)
                 } else if let branch = d["branch"]?.string {
-                    externalDep = ExternalDependency(url: url, branch: branch)
+                    externalDep = ExternalDependency(url: url, branch: branch, channels: channels)
                 } else if let commit = d["commit"]?.string {
-                    externalDep = ExternalDependency(url: url, commit: commit)
+                    externalDep = ExternalDependency(url: url, commit: commit, channels: channels)
                 } else if let tag = d["tag"]?.string {
-                    externalDep = ExternalDependency(url: url, tag: tag)
+                    externalDep = ExternalDependency(url: url, tag: tag, channels: channels)
                 }
                 if let externalDep = externalDep {
                     // add to external deps
                     self.externals.append(externalDep)
-                    let importFileString = "external/" + externalDep.name + "/build.atpkg"
 
-                    // import the atbuild file if it is there
-                    let adjustedImportPath = (pathOnDisk + importFileString).dirname()
-                    do {
-                        let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
-                        remotePackage.adjustedImportPath = adjustedImportPath
-                        remotePackages.append(remotePackage)
-                    } catch {
-                        print("Unsatisfied external dependency: \(externalDep.name) (Error: \(error)), run atpm fetch")
+                    switch(externalDep.dependencyType) {
+                        case .Git:
+                        let importFileString = "external/" + externalDep.name! + "/build.atpkg"
+
+                        // import the atbuild file if it is there
+                        let adjustedImportPath = (pathOnDisk + importFileString).dirname()
+                        do {
+                            let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                            remotePackage.adjustedImportPath = adjustedImportPath
+                            remotePackages.append(remotePackage)
+                        } catch {
+                            print("Unsatisfied external dependency: \(externalDep.name!) (Error: \(error)), run atpm fetch")
+                        }
+
+                        case .Manifest:
+                        //we don't import the package in this case
+                        break
                     }
+                    
                 } else {
                     fatalError("Could not parse external dependency declaration for \(url)")
                 }
@@ -350,5 +376,11 @@ final public class Package {
                 self.tasks[task.qualifiedName] = task
             }
         }
+
+        //load binary channels
+        if let binaries = type.properties[Key.Binaries.rawValue]?.map, let channels = binaries[Key.BinaryChannels.rawValue] {
+            self.binaryChannels = BinaryChannel.parse(channels)
+        }
+        else { self.binaryChannels = nil }
     }
 }
