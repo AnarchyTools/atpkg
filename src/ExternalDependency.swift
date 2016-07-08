@@ -26,7 +26,8 @@ final public class ExternalDependency {
         case Manifest
     }
 
-    public var url: URL
+    ///- note: This may be an HTTP-style URL or a SSH-style URL
+    public var url: String
     public var version: VersioningMethod
     public var channels: [String]?
 
@@ -49,7 +50,7 @@ final public class ExternalDependency {
             if let p = _parsedNameFromManifest { return p }
             return nil
         }
-        if let lastComponent = url.path.components.last {
+        if let lastComponent = url.split(string: "/").last {
             if lastComponent.hasSuffix(".git") {
                 return lastComponent.subString(toIndex: lastComponent.index(lastComponent.endIndex, offsetBy: -4))
             }
@@ -60,7 +61,7 @@ final public class ExternalDependency {
     }
 
     private init?(url: String, versionMethod: VersioningMethod, channels: [String]?) {
-        self.url = URL(string: url)
+        self.url = url
         self.version = versionMethod
         self.channels = channels
         if url.hasSuffix(".atpkg") {
