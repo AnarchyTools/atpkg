@@ -23,7 +23,7 @@
       :sources ["src/**.swift"]
       :name "atpkg"
       :output-type "static-library"
-      :link-with ["atfoundation.a"]
+      :link-with-product ["atfoundation.a"]
       :dependencies ["atfoundation.atfoundation"]
 
       :publish-product true
@@ -47,7 +47,7 @@
       :sources ["tests/**.swift"]
       :name "atpkgtests"
       :output-type "executable"
-      :link-with ["atpkg.a" "atfoundation.a"]
+      :link-with-product ["atpkg.a" "atfoundation.a"]
       :publish-product true
     }
 
