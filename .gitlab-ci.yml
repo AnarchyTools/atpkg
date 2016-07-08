@@ -6,6 +6,7 @@ linux:
     script: 
         - apt-get update
         - apt-get install atbuild
+        - git submodule update --init --recursive
         - atbuild check
     tags:
         - autoscale-linux
