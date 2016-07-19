@@ -43,6 +43,12 @@ final public class ExternalDependency {
     ///In practice, this is used to hold lock information for atpm
     public var _applicationInfo: Any? = nil
 
+    ///If non-nil, the dependency should only be loaded if the user specifies one of the strings in the array
+    public var ifIncluding: [String]? = nil
+
+    ///The reference to the containing package
+    public var package: Package
+
     ///The name of the dependency.
     ///Note that if the dependency points to a manifest, the name is not known.
     public var name: String? {
@@ -60,7 +66,8 @@ final public class ExternalDependency {
         }
     }
 
-    private init?(url: String, versionMethod: VersioningMethod, channels: [String]?) {
+    private init?(url: String, versionMethod: VersioningMethod, channels: [String]?, package: Package) {
+        self.package = package
         self.url = url
         self.version = versionMethod
         self.channels = channels
@@ -68,21 +75,20 @@ final public class ExternalDependency {
             self.dependencyType = .Manifest
         }
         else { self.dependencyType = .Git }
-        print("dependency type \(self.dependencyType)")
     }
-    convenience init?(url: String, version: [String], channels: [String]?) {
-        self.init(url: url, versionMethod: .Version(version), channels: channels)
-    }
-
-    convenience init?(url: String, commit: String, channels: [String]?) {
-        self.init(url: url, versionMethod: .Commit(commit), channels: channels)
+    convenience init?(url: String, version: [String], channels: [String]?, package: Package) {
+        self.init(url: url, versionMethod: .Version(version), channels: channels, package: package)
     }
 
-    convenience init?(url: String, branch: String, channels: [String]?) {
-        self.init(url: url, versionMethod: .Branch(branch), channels: channels)
+    convenience init?(url: String, commit: String, channels: [String]?, package: Package) {
+        self.init(url: url, versionMethod: .Commit(commit), channels: channels, package: package)
     }
 
-    convenience init?(url: String, tag: String, channels: [String]?) {
-        self.init(url: url, versionMethod: .Tag(tag), channels: channels)
+    convenience init?(url: String, branch: String, channels: [String]?, package: Package) {
+        self.init(url: url, versionMethod: .Branch(branch), channels: channels, package: package)
+    }
+
+    convenience init?(url: String, tag: String, channels: [String]?, package: Package) {
+        self.init(url: url, versionMethod: .Tag(tag), channels: channels, package: package)
     }
 }

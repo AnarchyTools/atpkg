@@ -256,15 +256,29 @@ final public class Package {
                             fatalError("Could not parse external dependency version declaration for \(url)")
                         }
                     }
-                    externalDep = ExternalDependency(url: url, version: versionDecl, channels: channels)
+                    externalDep = ExternalDependency(url: url, version: versionDecl, channels: channels, package: self)
                 } else if let branch = d["branch"]?.string {
-                    externalDep = ExternalDependency(url: url, branch: branch, channels: channels)
+                    externalDep = ExternalDependency(url: url, branch: branch, channels: channels, package: self)
                 } else if let commit = d["commit"]?.string {
-                    externalDep = ExternalDependency(url: url, commit: commit, channels: channels)
+                    externalDep = ExternalDependency(url: url, commit: commit, channels: channels, package: self)
                 } else if let tag = d["tag"]?.string {
-                    externalDep = ExternalDependency(url: url, tag: tag, channels: channels)
+                    externalDep = ExternalDependency(url: url, tag: tag, channels: channels, package: self)
                 }
                 if let externalDep = externalDep {
+
+                    if let iiv = d["if-including"] {
+                        guard case .Vector(let ii) = iiv else {
+                            fatalError("Non-vector if-including directive \(iiv)")
+                        }
+                        externalDep.ifIncluding = []
+                        for iss in ii {
+                            guard case .StringLiteral(let s) = iss else {
+                                fatalError("Non-string if-including directive \(iss)")
+                            }
+                            externalDep.ifIncluding!.append(s)
+                        }
+                    }
+
                     // add to external deps
                     self.externals.append(externalDep)
 
