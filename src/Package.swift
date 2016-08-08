@@ -14,7 +14,7 @@
 
 import atfoundation
 
-enum PackageError: ErrorProtocol {
+enum PackageError: Error {
     case NonVectorImport
     case ParserFailed
     case NonPackage

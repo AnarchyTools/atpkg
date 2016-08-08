@@ -14,7 +14,7 @@
 
 import atfoundation
 
-public enum ParseError: ErrorProtocol {
+public enum ParseError: Error {
     case InvalidPackageFile
     case ExpectedTokenType(TokenType, Token?)
     case InvalidTokenForValueType(Token?)
