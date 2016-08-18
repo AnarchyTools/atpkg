@@ -94,7 +94,7 @@ final public class Lexer {
 
             scanner.stall()
 
-            while let info = scanner.next() where isWhitespace(c: info.character) {}
+            while let info = scanner.next(), isWhitespace(c: info.character) {}
             scanner.stall()
 
             guard let next = scanner.next() else { return Token(type: .EOF) }
@@ -104,7 +104,7 @@ final public class Lexer {
             }
             else if isValidIdentifierSignalCharacter(c: next.character) {
                 var content = String(next.character!)
-                while let info = scanner.next() where isValidIdenitifierCharacter(c: info.character) {
+                while let info = scanner.next(), isValidIdenitifierCharacter(c: info.character) {
                     content.append(info.character!)
                 }
                 scanner.stall()
@@ -137,10 +137,10 @@ final public class Lexer {
                 let line = scanner.peek()!.line
                 var comment = ""
 
-                while let info = scanner.next() where info.character == ";" {}
+                while let info = scanner.next(), info.character == ";" {}
                 scanner.stall()
 
-                while let info = scanner.next() where info.character != "\n" {
+                while let info = scanner.next(), info.character != "\n" {
                     comment.append(info.character!)
                 }
 
@@ -148,7 +148,7 @@ final public class Lexer {
             }
             else if next.character == "\"" {
                 var content = ""
-                while let info = scanner.next() where info.character != "\"" {
+                while let info = scanner.next(), info.character != "\"" {
                     if info.character == "\\" {
                         let escaped = scanner.next()
                         let char = escaped?.character

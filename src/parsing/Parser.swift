@@ -111,7 +111,7 @@ final public class Parser {
     private func parseKeyValuePairs() throws -> [String:ParseValue] {
         var pairs: [String:ParseValue] = [:]
 
-        while let token = next() where token.type != .CloseParen && token.type != .CloseBrace {
+        while let token = next(), token.type != .CloseParen && token.type != .CloseBrace {
             lexer.stall()
 
             let key = try parseKey()
@@ -152,24 +152,24 @@ final public class Parser {
     }
 
     private func parseVector() throws -> ParseValue {
-        if let token = next() where token.type != .OpenBracket { throw ParseError.ExpectedTokenType(.OpenBracket, token) }
+        if let token = next(),token.type != .OpenBracket { throw ParseError.ExpectedTokenType(.OpenBracket, token) }
         var items: [ParseValue] = []
 
-        while let token = next() where token.type != .CloseBracket {
+        while let token = next(), token.type != .CloseBracket {
             lexer.stall()
             items.append(try parseValue())
         }
         lexer.stall()
 
-        if let token = next() where token.type != .CloseBracket { throw ParseError.ExpectedTokenType(.CloseBracket, token) }
+        if let token = next(), token.type != .CloseBracket { throw ParseError.ExpectedTokenType(.CloseBracket, token) }
 
         return .Vector(items)
     }
 
     private func parseMap() throws -> ParseValue {
-        if let token = next() where token.type != .OpenBrace { throw ParseError.ExpectedTokenType(.OpenBrace, token) }
+        if let token = next(), token.type != .OpenBrace { throw ParseError.ExpectedTokenType(.OpenBrace, token) }
         let items = try parseKeyValuePairs()
-        if let token = next() where token.type != .CloseBrace { throw ParseError.ExpectedTokenType(.CloseBrace, token) }
+        if let token = next(), token.type != .CloseBrace { throw ParseError.ExpectedTokenType(.CloseBrace, token) }
 
         return .Map(items)
     }
