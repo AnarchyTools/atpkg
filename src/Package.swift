@@ -14,7 +14,7 @@
 
 import atfoundation
 
-enum PackageError: ErrorProtocol {
+enum PackageError: Error {
     case NonVectorImport
     case ParserFailed
     case NonPackage
@@ -22,12 +22,11 @@ enum PackageError: ErrorProtocol {
     case RequiredOverlayNotPresent([String])
 }
 
-private extension Task {
+fileprivate extension Task {
  /**Apply the overlay to the receiver
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
 - return: whether the overlay applied another overlay */
-    @warn_unused_result
-    private func applyOverlay(name: String, overlay: [String: ParseValue]) -> Bool {
+    fileprivate func applyOverlay(name: String, overlay: [String: ParseValue]) -> Bool {
         precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
         for (optionName, optionValue) in overlay {
             switch(optionValue) {

@@ -23,21 +23,32 @@ public func collectSources(sourceDescriptions: [String], taskForCalculatingPath 
     for unPrefixedDescription in sourceDescriptions {
         let description = (task?.importedPath ?? Path()) + unPrefixedDescription
         if unPrefixedDescription.hasSuffix("**.swift") {
-            let basepath = description.dirname()
-            do {
-                let iterator = try FS.iterateItems(path: basepath, recursive: true)
-                for file in iterator {
-                    if file.path.components.last!.hasSuffix(".swift") {
-                        sources.append(file.path)
-                    }
-                }
-            } catch {
-                fatalError("Error: \(error) for '\(basepath)'")
-            }
+            sources.append(contentsOf: findSources(basepath: description.dirname(),extension: ".swift"))
+        }
+        else if unPrefixedDescription.hasSuffix("**.c") {
+            sources.append(contentsOf: findSources(basepath: description.dirname(),extension: ".c"))
+        }
+        else if unPrefixedDescription.hasSuffix("**.h") {
+            sources.append(contentsOf: findSources(basepath: description.dirname(),extension: ".h"))
         }
         else {
             sources.append(description)
         }
+    }
+    return sources
+}
+
+private func findSources(basepath: Path, extension: String) -> [Path] {
+    var sources: [Path] = []
+    do {
+        let iterator = try FS.iterateItems(path: basepath, recursive: true)
+        for file in iterator {
+            if file.path.components.last!.hasSuffix(`extension`) {
+                sources.append(file.path)
+            }
+        }
+    } catch {
+        fatalError("Error: \(error) for '\(basepath)'")
     }
     return sources
 }

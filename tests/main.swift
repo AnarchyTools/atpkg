@@ -16,7 +16,7 @@
 import atfoundation
 
 
-extension String : ErrorProtocol {}
+extension String : Error {}
 
 enum test {
     static func assert(_ condition: Bool, file: String = #file, functionName: String = #function, line: Int = #line) throws {
