@@ -1,0 +1,24 @@
+(package
+  :name "multi-overlays"
+  ;;in this test we verify the overlay of a custom overlay export
+
+  :overlays {
+    :link { ;;exporting link flags
+      :overlays {
+        :atbuild.platform.vax { ;;custom link flags for VAX platform
+          :link-options ["-DUSEVAX"]
+        }
+      }
+    }
+  }
+  
+  :tasks {
+    :build {
+        :link-options ["-DUSENORMAL"]
+        :use-overlays ["link"] ;;get VAX settings if on VAX
+        :tool "foo"
+    }
+  }
+)
+
+;; End of the sample.

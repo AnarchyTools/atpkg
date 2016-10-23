@@ -31,6 +31,7 @@ class PackageTests: Test {
         PackageTests.testOnlyPlatforms,
         PackageTests.testUseBinary,
         PackageTests.testBinaryManifest,
+        PackageTests.testMultiOverlays,
 
     ]
 
@@ -281,5 +282,15 @@ class PackageTests: Test {
             }
         }
         
+    }
+
+    static func testMultiOverlays() throws {
+        let filepath = Path("tests/collateral/multi-overlays.atpkg")
+
+        let p = try Package(filepath: filepath, overlay: ["atbuild.platform.vax"], focusOnTask: nil)
+        guard let task = p.tasks["build"] else { fatalError("No task")}
+        guard let linkOptions = task["link-options"]?.vector else { fatalError("No link options")}
+        print(linkOptions)
+        try test.assert(linkOptions.count == 2)
     }
 }

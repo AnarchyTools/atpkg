@@ -22,11 +22,21 @@ enum PackageError: Error {
     case RequiredOverlayNotPresent([String])
 }
 
+fileprivate func merge(_ lhs: ParseValue, _ rhs: ParseValue) -> ParseValue {
+    switch(lhs, rhs) {
+        case (.Vector(let l), .Vector(let r)):
+        return .Vector(l + r)
+
+        default:
+        fatalError("Can't merge \(lhs) and \(rhs)")
+    }
+}
 fileprivate extension Task {
  /**Apply the overlay to the receiver
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
 - return: whether the overlay applied another overlay */
-    fileprivate func applyOverlay(name: String, overlay: [String: ParseValue]) -> Bool {
+    fileprivate func applyOverlay(name: String, overlay: [String: ParseValue], globalOverlays: [String]) -> Bool {
+        print("applying overlay \(name)...")
         precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
         for (optionName, optionValue) in overlay {
             switch(optionValue) {
@@ -64,6 +74,22 @@ fileprivate extension Task {
                 }
                 self[optionName] = ParseValue.BoolLiteral(b)
 
+                case ParseValue.Map(let m):
+                precondition(optionName == "overlays", "Don't support map merging for key \(optionName)")
+                for key in m.keys {
+                    if globalOverlays.contains(key) {
+                        for (key, value) in m[key]!.map! {
+                            if let existingValue = self[key] {
+                                print("merging",existingValue, m[key])
+                                self[key] = merge(existingValue, value)
+                            }
+                            else {
+                                self[key] = value
+                            }
+                        }
+                        
+                    }
+                }
 
                 default:
                 fatalError("Canot overlay value \(optionValue); please file a bug")
@@ -350,7 +376,7 @@ final public class Package {
                     guard let overlay = declaredOverlays[overlayName] else {
                         fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
                     }
-                    again = again || task.applyOverlay(name: overlayName, overlay: overlay)
+                    again = again || task.applyOverlay(name: overlayName, overlay: overlay, globalOverlays: requestedGlobalOverlays)
                 }
                 for overlayName in requestedGlobalOverlays {
                     if task.appliedOverlays.contains(overlayName) { continue }
@@ -363,7 +389,7 @@ final public class Package {
                         }
                         continue
                     }
-                    again = again || task.applyOverlay(name: overlayName, overlay: overlay)
+                    again = again || task.applyOverlay(name: overlayName, overlay: overlay, globalOverlays: requestedGlobalOverlays)
                     usedGlobalOverlays.append(overlayName)
                 }
             }
