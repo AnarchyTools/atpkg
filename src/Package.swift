@@ -36,7 +36,6 @@ fileprivate extension Task {
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
 - return: whether the overlay applied another overlay */
     fileprivate func applyOverlay(name: String, overlay: [String: ParseValue], globalOverlays: [String]) -> Bool {
-        print("applying overlay \(name)...")
         precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
         for (optionName, optionValue) in overlay {
             switch(optionValue) {
@@ -80,7 +79,6 @@ fileprivate extension Task {
                     if globalOverlays.contains(key) {
                         for (key, value) in m[key]!.map! {
                             if let existingValue = self[key] {
-                                print("merging",existingValue, m[key])
                                 self[key] = merge(existingValue, value)
                             }
                             else {
@@ -383,9 +381,10 @@ final public class Package {
 
                     guard let overlay = declaredOverlays[overlayName] else {
                         if focusOnTask == task.unqualifiedName || focusOnTask == task.qualifiedName {
-                            let proposedWarning = "Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)"
-                            if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
-
+                            if !overlayName.hasPrefix("at.") && !overlayName.hasPrefix("atbuild.") {
+                                let proposedWarning = "Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)"
+                                if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
+                            }
                         }
                         continue
                     }
@@ -402,7 +401,7 @@ final public class Package {
         //warn about unused global overlays
         for requestedOverlay in requestedGlobalOverlays {
             if !usedGlobalOverlays.contains(requestedOverlay) {
-                if !requestedOverlay.hasPrefix("atbuild.") {
+                if !requestedOverlay.hasPrefix("atbuild.") && !requestedOverlay.hasPrefix("at.") {
                     print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
                 }
             }
