@@ -248,7 +248,7 @@ final public class Package {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk + importFileString).dirname()
-                let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil, softFail: softFail)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
