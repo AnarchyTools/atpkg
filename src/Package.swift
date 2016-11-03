@@ -80,7 +80,6 @@ fileprivate extension Task {
                     if globalOverlays.contains(key) {
                         for (key, value) in m[key]!.map! {
                             if let existingValue = self[key] {
-                                print("merging",existingValue, m[key])
                                 self[key] = merge(existingValue, value)
                             }
                             else {
