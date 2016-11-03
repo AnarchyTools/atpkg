@@ -36,7 +36,6 @@ fileprivate extension Task {
 - warning: an overlay may itself apply another overlay.  In this case, the overlay for the task should be recalculated.
 - return: whether the overlay applied another overlay */
     fileprivate func applyOverlay(name: String, overlay: [String: ParseValue], globalOverlays: [String]) -> Bool {
-        print("applying overlay \(name)...")
         precondition(!appliedOverlays.contains(name), "Already applied overlay named \(name)")
         for (optionName, optionValue) in overlay {
             switch(optionValue) {
@@ -191,7 +190,7 @@ final public class Package {
     - parameter overlay: A list of overlays to apply globally to all tasks in the package.
     - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
 */
-    public convenience init(filepath: Path, overlay: [String], focusOnTask: String?) throws {
+    public convenience init(filepath: Path, overlay: [String], focusOnTask: String?, softFail: Bool = false) throws {
 
         //todo: why doesn't this throw?
         guard let parser = try Parser(filepath: filepath) else {
@@ -200,15 +199,16 @@ final public class Package {
 
         let result = try parser.parse()
         let basepath = filepath.dirname()
-        try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask)
+        try self.init(type: result, overlay: overlay, pathOnDisk:basepath, focusOnTask: focusOnTask, softFail: softFail)
     }
 
     /**
     - parameter overlay: The names of things to overlay.
     - parameter pathOnDisk: The path to the file on disk.  This does not include the file name.
     - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
+    - parameter softFail: Don't fail hard on certain kinds of errors that may occur if dependencies are not fetched
     */
-    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: Path, focusOnTask: String?) throws {
+    public init(type: ParseType, overlay requestedGlobalOverlays: [String], pathOnDisk: Path, focusOnTask: String?, softFail: Bool = false) throws {
         //warn on unknown keys
         for (k,_) in type.properties {
             if !Key.allKeys.map({$0.rawValue}).contains(k) {
@@ -248,7 +248,7 @@ final public class Package {
             for importFile in imports {
                 guard let importFileString = importFile.string else { fatalError("Non-string import \(importFile)")}
                 let adjustedImportPath = (pathOnDisk + importFileString).dirname()
-                let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil, softFail: softFail)
                 remotePackage.adjustedImportPath = adjustedImportPath
                 remotePackages.append(remotePackage)
             }
@@ -373,7 +373,14 @@ final public class Package {
                 for overlayName in task.overlay {
                     if task.appliedOverlays.contains(overlayName) { continue }
                     guard let overlay = declaredOverlays[overlayName] else {
-                        fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
+                        if softFail {
+                            let proposedWarning = "Warning: Can't find overlay named \(overlayName) in \(declaredOverlays); run atpm fetch"
+                            if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
+                            continue
+                        }
+                        else {
+                            fatalError("Can't find overlay named \(overlayName) in \(declaredOverlays)")
+                        }
                     }
                     again = again || task.applyOverlay(name: overlayName, overlay: overlay, globalOverlays: requestedGlobalOverlays)
                 }
@@ -382,9 +389,10 @@ final public class Package {
 
                     guard let overlay = declaredOverlays[overlayName] else {
                         if focusOnTask == task.unqualifiedName || focusOnTask == task.qualifiedName {
-                            let proposedWarning = "Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)"
-                            if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
-
+                            if !overlayName.hasPrefix("at.") && !overlayName.hasPrefix("atbuild.") {
+                                let proposedWarning = "Warning: Can't apply overlay \(overlayName) to task \(task.qualifiedName)"
+                                if !warnings.contains(proposedWarning) { warnings.append(proposedWarning) }
+                            }
                         }
                         continue
                     }
@@ -401,7 +409,7 @@ final public class Package {
         //warn about unused global overlays
         for requestedOverlay in requestedGlobalOverlays {
             if !usedGlobalOverlays.contains(requestedOverlay) {
-                if !requestedOverlay.hasPrefix("atbuild.") {
+                if !requestedOverlay.hasPrefix("atbuild.") && !requestedOverlay.hasPrefix("at.") {
                     print("Warning: overlay \(requestedOverlay) had no effect on package \(name)")
                 }
             }
