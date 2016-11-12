@@ -190,7 +190,7 @@ final public class Package {
     - parameter overlay: A list of overlays to apply globally to all tasks in the package.
     - parameter focusOnTask: The user has "selected" the particular task.  We provide more diagnostics for this task.
 */
-    public convenience init(filepath: Path, overlay: [String], focusOnTask: String?, softFail: Bool = false) throws {
+    public convenience init(filepath: Path, overlay: [String], focusOnTask: String?, softFail: Bool = true) throws {
 
         //todo: why doesn't this throw?
         guard let parser = try Parser(filepath: filepath) else {
@@ -313,7 +313,7 @@ final public class Package {
                         // import the atbuild file if it is there
                         let adjustedImportPath = (pathOnDisk + importFileString).dirname()
                         do {
-                            let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil)
+                            let remotePackage = try Package(filepath: pathOnDisk + importFileString, overlay: requestedGlobalOverlays, focusOnTask: nil, softFail: softFail)
                             remotePackage.adjustedImportPath = adjustedImportPath
                             remotePackages.append(remotePackage)
                         } catch {
